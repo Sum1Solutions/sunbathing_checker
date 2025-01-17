@@ -1,6 +1,6 @@
 # Sunbathing Weather Checker
 
-The **Sunbathing Weather Checker** is a Python web app that helps you determine whether the next 3 days are suitable for sunbathing in Naples, Fort Lauderdale, or Miami. It uses real-time weather data from the **National Weather Service (NWS) API**.
+The **Sunbathing Weather Checker** is a Python web app that helps you determine whether there are some suitable sunbathing days coming up in Naples, Fort Lauderdale, and/or Miami. It uses real-time weather data from the **National Weather Service (NWS) API**.
 
 ## Features
 
@@ -12,7 +12,7 @@ The **Sunbathing Weather Checker** is a Python web app that helps you determine 
 
 1. Clone this repository:
    ```bash
-   git clone [your-repo-url]
+   git clone https://github.com/Sum1Solutions/sunbathing_checker.git
    cd sunbathing_checker
    ```
 
