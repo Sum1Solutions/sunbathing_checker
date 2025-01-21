@@ -240,16 +240,16 @@ def get_day_evaluation(day_periods, criteria):
     day_wind = float(day_period['windSpeed'].split()[0])
     if day_wind > max_wind:
         score -= 1.0
-        deductions.append(f"💨 Wind speed of {day_wind} mph is too strong for comfortable sunbathing (-1.0 flamingos)")
+        deductions.append(f"💨 Wind speed of {day_wind} mph makes sunbathing less comfortable (-1.0 flamingos)")
     
     # Conditions assessment
     conditions = day_period['shortForecast'].lower()
     if any(x in conditions for x in ['rain', 'shower', 'storm', 'thunder']):
         score -= 1.0
-        deductions.append(f"🌧️ Weather conditions show {day_period['shortForecast']} - not suitable for sunbathing (-1.0 flamingos)")
+        deductions.append(f"🌧️ Weather conditions show {day_period['shortForecast']} - less suitable for sunbathing (-1.0 flamingos)")
     elif any(x in conditions for x in ['cloudy', 'overcast']):
         score -= 0.5
-        deductions.append(f"☁️ {day_period['shortForecast']} - limited sun exposure (-0.5 flamingos)")
+        deductions.append(f"☁️ {day_period['shortForecast']} - reduced sun exposure (-0.5 flamingos)")
     
     # Round to nearest 0.5 and ensure score is between 0 and 5
     score = round(score * 2) / 2
@@ -411,6 +411,7 @@ HTML_TEMPLATE = r"""
             border: 2px solid #ffb6c1;
             border-radius: 10px;
             overflow: hidden;
+            cursor: pointer;
         }
         
         .day-header {
@@ -420,6 +421,11 @@ HTML_TEMPLATE = r"""
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .day-forecast:hover .day-header {
+            background-color: #ffe0eb;
         }
         
         .date {
@@ -435,6 +441,22 @@ HTML_TEMPLATE = r"""
         .conditions {
             padding: 20px;
             background: white;
+            display: none;  /* Hidden by default */
+            transition: all 0.3s ease;
+        }
+        
+        .conditions.active {
+            display: block;
+        }
+        
+        .expand-icon {
+            font-size: 1.2em;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .day-forecast.active .expand-icon {
+            transform: rotate(180deg);
         }
         
         .flamingo-explanation {
@@ -487,82 +509,88 @@ HTML_TEMPLATE = r"""
         .loading.active {
             display: flex;
         }
+        
+        .error-message {
+            background-color: #ffe6e6;
+            border: 2px solid #ff69b4;
+            color: #ff1493;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Tracey's Forecast 🌞</h1>
         
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+        
         <form method="POST" onsubmit="showLoading()">
             <div class="criteria-selector">
                 <div class="criteria-row">
                     <div class="criteria-group">
-                        <h3>Location</h3>
-                        <select name="location" class="location-select" onchange="toggleCustomLocation(this.value)">
-                            {% for loc in locations %}
-                            <option value="{{ loc }}" {% if loc == location %}selected{% endif %}>{{ loc }}</option>
-                            {% endfor %}
-                            <option value="other" {% if location == 'other' %}selected{% endif %}>Other (Custom)</option>
-                        </select>
-                        <div id="customLocation" class="custom-location {% if location == 'other' %}active{% endif %}">
-                            <label>Enter coordinates for your location:</label>
-                            <input type="number" name="custom_lat" step="0.0001" placeholder="Latitude (e.g., 26.1420)" 
-                                value="{{ custom_lat if custom_lat else '' }}" required>
-                            <input type="number" name="custom_lon" step="0.0001" placeholder="Longitude (e.g., -81.7948)" 
-                                value="{{ custom_lon if custom_lon else '' }}" required>
+                        <label>Select Locations:</label>
+                        {% for location in locations %}
+                        <div class="checkbox-label">
+                            <input type="checkbox" name="selected_locations" value="{{ location }}" 
+                                   {% if location in selected_locations %}checked{% endif %}>
+                            {{ location }}
                         </div>
+                        {% endfor %}
                     </div>
-                    
                     <div class="criteria-group">
-                        <h3>Temperature & Wind</h3>
-                        <label>
-                            Minimum Day Temperature:
-                            <input type="number" name="min_day_temp" value="{{ criteria.get('min_day_temp', 75) }}">°F
+                        <label>Minimum Day Temperature (°F):
+                            <input type="number" name="min_day_temp" value="{{ criteria.min_day_temp }}" min="0" max="120">
                         </label>
-                        <label>
-                            Minimum Night Temperature:
-                            <input type="number" name="min_night_temp" value="{{ criteria.get('min_night_temp', 65) }}">°F
+                        <label>Minimum Night Temperature (°F):
+                            <input type="number" name="min_night_temp" value="{{ criteria.min_night_temp }}" min="0" max="120">
                         </label>
-                        <label>
-                            Maximum Wind Speed:
-                            <input type="number" name="max_wind" value="{{ criteria.get('max_wind', 15) }}">mph
+                        <label>Maximum Wind Speed (mph):
+                            <input type="number" name="max_wind" value="{{ criteria.max_wind }}" min="0" max="50">
                         </label>
                     </div>
-                    
                     <div class="criteria-group">
-                        <h3>Acceptable Weather Conditions</h3>
+                        <label>Allowed Weather Conditions:</label>
                         <div class="checkbox-group">
-                            {% for condition in ['Sunny', 'Mostly Sunny', 'Partly Sunny', 'Partly Cloudy', 'Clear', 'Scattered Rain'] %}
-                            <label class="checkbox-label {% if condition in criteria.get('allowed_conditions', []) %}checked{% endif %}">
-                                <input type="checkbox" name="conditions" value="{{ condition }}"
-                                    {% if condition in criteria.get('allowed_conditions', []) %}checked{% endif %}>
+                            {% for condition in default_criteria.allowed_conditions %}
+                            <div class="checkbox-label">
+                                <input type="checkbox" name="allowed_conditions" value="{{ condition }}"
+                                       {% if condition in criteria.allowed_conditions %}checked{% endif %}>
                                 {{ condition }}
-                            </label>
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-                
-                <button type="submit" class="submit-btn">Check Weather</button>
+                <button type="submit" class="submit-btn">Check Weather ☀️</button>
             </div>
         </form>
-
+        
         <div id="loading" class="loading">
             <p>💅 Checking the sunshine... Please wait! 🌞</p>
         </div>
-
-        {% if results %}
+        
         <div class="results">
             {% for location, days in results.items() %}
             <div class="location-results">
                 <div class="location-name">{{ location }}</div>
                 {% for day in days %}
-                <div class="day-forecast">
+                <div class="day-forecast" onclick="toggleDetails(this)">
                     <div class="day-header">
                         <div class="date">{{ day.date }}</div>
-                        <div class="flamingo-rating">
-                            {% for i in range(day.rating|int) %}🦩{% endfor %}
-                            {% if day.rating % 1 == 0.5 %}½🦩{% endif %}
+                        <div style="display: flex; align-items: center;">
+                            <div class="flamingo-rating">
+                                {% for i in range(day.rating|int) %}🦩{% endfor %}
+                                {% if day.rating % 1 == 0.5 %}½🦩{% endif %}
+                            </div>
+                            <span class="expand-icon">▼</span>
                         </div>
                     </div>
                     <div class="conditions">
@@ -588,28 +616,16 @@ HTML_TEMPLATE = r"""
             </div>
             {% endfor %}
         </div>
-        {% endif %}
     </div>
     <script>
         function showLoading() {
             document.getElementById("loading").classList.add("active");
         }
         
-        function toggleCustomLocation(value) {
-            const customLocation = document.getElementById('customLocation');
-            const inputs = customLocation.getElementsByTagName('input');
-            
-            if (value === 'other') {
-                customLocation.classList.add('active');
-                for (let input of inputs) {
-                    input.required = true;
-                }
-            } else {
-                customLocation.classList.remove('active');
-                for (let input of inputs) {
-                    input.required = false;
-                }
-            }
+        function toggleDetails(element) {
+            element.classList.toggle('active');
+            const conditions = element.querySelector('.conditions');
+            conditions.classList.toggle('active');
         }
         
         // Update checkbox label styling when checked/unchecked
@@ -617,6 +633,8 @@ HTML_TEMPLATE = r"""
             checkbox.addEventListener('change', function() {
                 this.parentElement.classList.toggle('checked', this.checked);
             });
+            // Initialize state
+            checkbox.parentElement.classList.toggle('checked', checkbox.checked);
         });
     </script>
 </body>
@@ -626,6 +644,19 @@ HTML_TEMPLATE = r"""
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        # Get selected locations
+        selected_locations = request.form.getlist('selected_locations')
+        if not selected_locations:
+            return render_template_string(
+                HTML_TEMPLATE,
+                results={},
+                locations=LOCATIONS.keys(),
+                criteria=DEFAULT_CRITERIA,
+                default_criteria=DEFAULT_CRITERIA,
+                selected_locations=['Fort Lauderdale'],
+                error="Please select at least one location! 🌴"
+            )
+            
         # Get user criteria from form
         user_criteria = {
             'min_day_temp': float(request.form.get('min_day_temp', DEFAULT_CRITERIA['min_day_temp'])),
@@ -635,8 +666,11 @@ def home():
         }
         
         results = {}
-        for location, coords in LOCATIONS.items():
-            lat, lon = coords['lat'], coords['lon']
+        for location in selected_locations:
+            if location not in LOCATIONS:
+                continue
+                
+            lat, lon = LOCATIONS[location]['lat'], LOCATIONS[location]['lon']
             try:
                 forecast_data = get_forecast(lat, lon)
                 days = parse_next_3_days(forecast_data)
@@ -670,17 +704,21 @@ def home():
         return render_template_string(
             HTML_TEMPLATE,
             results=results,
-            locations=LOCATIONS,
+            locations=LOCATIONS.keys(),
             criteria=user_criteria,
-            default_criteria=DEFAULT_CRITERIA
+            default_criteria=DEFAULT_CRITERIA,
+            selected_locations=selected_locations,
+            error=None
         )
     
     return render_template_string(
         HTML_TEMPLATE,
         results={},
-        locations=LOCATIONS,
+        locations=LOCATIONS.keys(),
         criteria=DEFAULT_CRITERIA,
-        default_criteria=DEFAULT_CRITERIA
+        default_criteria=DEFAULT_CRITERIA,
+        selected_locations=['Fort Lauderdale'],
+        error=None
     )
 
 if __name__ == "__main__":
