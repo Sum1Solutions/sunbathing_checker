@@ -47,6 +47,25 @@ The **Sunbathing Weather Checker** is a Python web app that helps you determine 
 3. Analyzes temperature, wind, and forecast conditions for sunbathing suitability.
 4. Displays the results on the same page.
 
+## Ideal Sunbathing Conditions
+
+The app considers the following criteria to determine if conditions are suitable for sunbathing:
+- **Temperature**: A minimum temperature threshold (e.g., 75°F) is required for both morning (AM) and afternoon (PM) periods.
+- **Sunshine**: The app checks for a minimum amount of sunshine hours per day, with a preference for forecasts that include "Sunny," "Mostly Sunny," or similar terms.
+
+## Detailed Sunbathing Conditions Analysis
+
+The app performs a detailed analysis of the weather forecast to determine the suitability of conditions for sunbathing. This includes:
+
+- **Temperature Analysis**: The app checks the temperature forecast for both morning and afternoon periods to ensure that it meets the minimum temperature threshold.
+- **Sunshine Analysis**: The app analyzes the forecast to determine the amount of sunshine hours per day, taking into account the time of day and the intensity of the sunshine.
+- **Wind Analysis**: The app also considers the wind forecast to ensure that it is not too windy, which could make sunbathing uncomfortable.
+
+## Additional Features
+
+- **Email Notifications**: Users can opt to receive email notifications about upcoming sunbathing days based on their preferences. The app allows users to customize their notification settings, including the frequency and timing of notifications.
+- **Historical Weather Data**: The app provides access to historical weather data to help users plan future sunbathing activities. This feature allows users to view past weather patterns and make informed decisions about when to plan their sunbathing activities.
+
 ## Criteria for Sunbathing Weather
 
 - Sunshine conditions: Forecast includes "Sunny," "Mostly Sunny," or similar terms.

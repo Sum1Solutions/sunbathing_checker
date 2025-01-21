@@ -59,7 +59,7 @@ def get_forecast(lat, lon):
     
     return forecast_data
 
-def parse_next_3_days(forecast_data):
+def parse_next_7_days(forecast_data):
     periods = forecast_data["properties"]["periods"]
     
     # Get up to 7 days of forecasts (14 periods for day/night)
@@ -166,14 +166,14 @@ def calculate_day_flamingo_rating(day_periods, criteria):
     # Day temperature rating (can lose up to 1.5 flamingos)
     day_temp = float(day_period['temperature'])
     if day_temp < min_day_temp:
-        score -= 1.5
-        print(f"Temperature below minimum (-1.5): {day_temp}°F < {min_day_temp}°F")
+        score -= 2
+        print(f"Temperature below minimum (-2): {day_temp}°F < {min_day_temp}°F")
     
     # Night temperature rating (can lose up to 1.5 flamingos)
     night_temp = float(night_period['temperature'])
     if night_temp < min_night_temp:
-        score -= 1.5
-        print(f"Night temp below minimum (-1.5): {night_temp}°F < {min_night_temp}°F")
+        score -= 1
+        print(f"Night temp below minimum (-1): {night_temp}°F < {min_night_temp}°F")
     
     # Wind rating (can lose up to 1 flamingo)
     day_wind = float(day_period['windSpeed'].split()[0])
@@ -190,8 +190,8 @@ def calculate_day_flamingo_rating(day_periods, criteria):
         score -= 0.5
         print("Suboptimal conditions - cloudy (-0.5)")
     
-    # Round to nearest 0.5 and ensure score is between 0 and 5
-    score = round(score * 2) / 2
+    # Round to nearest integer and ensure score is between 0 and 5
+    score = round(score)
     score = max(0, min(5, score))
     
     print(f"Final flamingo rating: {score}")
@@ -227,47 +227,46 @@ def get_day_evaluation(day_periods, criteria):
     # Day temperature assessment
     day_temp = float(day_period['temperature'])
     if day_temp < min_day_temp:
-        score -= 1.5
-        deductions.append(f"🌡️ Day temperature is {day_temp}°F, which is below the minimum {min_day_temp}°F (-1.5 flamingos)")
+        score -= 2
+        deductions.append(f"🌡️ Day temperature is {day_temp}°F, which is below the minimum {min_day_temp}°F (-2 flamingos)")
     
     # Night temperature assessment
     night_temp = float(night_period['temperature'])
     if night_temp < min_night_temp:
-        score -= 1.5
-        deductions.append(f"🌙 Night temperature drops to {night_temp}°F, below the minimum {min_night_temp}°F (-1.5 flamingos)")
+        score -= 1
+        deductions.append(f"🌙 Night temperature drops to {night_temp}°F, below the minimum {min_night_temp}°F (-1 flamingo)")
     
     # Wind assessment
     day_wind = float(day_period['windSpeed'].split()[0])
     if day_wind > max_wind:
         score -= 1.0
-        deductions.append(f"💨 Wind speed of {day_wind} mph makes sunbathing less comfortable (-1.0 flamingos)")
+        deductions.append(f"💨 Wind speed of {day_wind} mph makes sunbathing less comfortable (-1 flamingo)")
     
     # Conditions assessment
     conditions = day_period['shortForecast'].lower()
     if any(x in conditions for x in ['rain', 'shower', 'storm', 'thunder']):
         score -= 1.0
-        deductions.append(f"🌧️ Weather conditions show {day_period['shortForecast']} - less suitable for sunbathing (-1.0 flamingos)")
+        deductions.append(f"🌧️ Weather conditions show {day_period['shortForecast']} - less suitable for sunbathing (-1 flamingo)")
     elif any(x in conditions for x in ['cloudy', 'overcast']):
-        score -= 0.5
-        deductions.append(f"☁️ {day_period['shortForecast']} - reduced sun exposure (-0.5 flamingos)")
+        score -= 1.0
+        deductions.append(f"☁️ {day_period['shortForecast']} - reduced sun exposure (-1 flamingo)")
     
-    # Round to nearest 0.5 and ensure score is between 0 and 5
-    score = round(score * 2) / 2
+    # Round to nearest integer and ensure score is between 0 and 5
+    score = round(score)
     score = max(0, min(5, score))
     
     # Create the explanation
     if score == 5:
-        explanation = "🏆 Perfect sunbathing conditions! All parameters are ideal:\n"
-        explanation += f"• Day temperature: {day_temp}°F (perfect)\n"
-        explanation += f"• Night temperature: {night_temp}°F (perfect)\n"
-        explanation += f"• Wind speed: {day_wind} mph (perfect)\n"
-        explanation += f"• Weather: {day_period['shortForecast']} (perfect)"
+        explanation = "🦩🦩🦩🦩🦩 Perfect sunbathing conditions! All parameters are ideal."
+    elif score == 0:
+        explanation = "❌ Not suitable for sunbathing today.\n\n"
     else:
-        explanation = f"This day gets {score} out of 5 flamingos.\n\n"
-        if deductions:
-            explanation += "Here's why:\n• " + "\n• ".join(deductions)
-        else:
-            explanation += "Some conditions are not quite perfect."
+        explanation = f"🦩 {score} flamingos for today.\n\n"
+        
+    if deductions:
+        explanation += "Here's why:\n\n"
+        for deduction in deductions:
+            explanation += f"• {deduction}\n"
     
     return {
         'rating': score,
@@ -280,7 +279,7 @@ HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tracey's Forecast 🌞</title>
+    <title>Tracey's Forecaster 🌞</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -587,8 +586,11 @@ HTML_TEMPLATE = r"""
                         <div class="date">{{ day.date }}</div>
                         <div style="display: flex; align-items: center;">
                             <div class="flamingo-rating">
-                                {% for i in range(day.rating|int) %}🦩{% endfor %}
-                                {% if day.rating % 1 == 0.5 %}½🦩{% endif %}
+                                {% if day.rating == 0 %}
+                                    ❌
+                                {% else %}
+                                    {% for i in range(day.rating) %}🦩{% endfor %}
+                                {% endif %}
                             </div>
                             <span class="expand-icon">▼</span>
                         </div>
@@ -673,7 +675,7 @@ def home():
             lat, lon = LOCATIONS[location]['lat'], LOCATIONS[location]['lon']
             try:
                 forecast_data = get_forecast(lat, lon)
-                days = parse_next_3_days(forecast_data)
+                days = parse_next_7_days(forecast_data)
                 results[location] = []
                 
                 for day in days:
