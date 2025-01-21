@@ -157,77 +157,48 @@ def calculate_day_flamingo_rating(day_periods, criteria):
     print(f"Day wind: {day_period['windSpeed']}")
     print(f"Night temp: {night_period['temperature']}°F")
     
-    # Check if basic requirements are met
-    if not is_sunbathing_day([day_period], criteria):
-        print(f"Basic requirements not met for day")
-        return 0
-        
-    score = 0
+    # Start with perfect score of 5 flamingos
+    score = 5.0
     min_day_temp = criteria.get('min_day_temp', DEFAULT_CRITERIA['min_day_temp'])
     min_night_temp = criteria.get('min_night_temp', DEFAULT_CRITERIA['min_night_temp'])
     max_wind = criteria.get('max_wind', DEFAULT_CRITERIA['max_wind'])
     
-    # Day temperature rating (0-2 flamingos)
+    # Day temperature rating (can lose up to 1.5 flamingos)
     day_temp = float(day_period['temperature'])
-    if day_temp >= min_day_temp + 15:  # Perfect temp
-        score += 2
-        print(f"Perfect day temp (+2): {day_temp}°F >= {min_day_temp + 15}°F")
-    elif day_temp >= min_day_temp + 7:  # Very good temp
-        score += 1
-        print(f"Very good day temp (+1): {day_temp}°F >= {min_day_temp + 7}°F")
-    else:
-        print(f"Basic day temp (0): {day_temp}°F")
+    if day_temp < min_day_temp:
+        score -= 1.5
+        print(f"Temperature below minimum (-1.5): {day_temp}°F < {min_day_temp}°F")
     
-    # Night temperature bonus (0-0.5 flamingos)
+    # Night temperature rating (can lose up to 1.5 flamingos)
     night_temp = float(night_period['temperature'])
-    if night_temp >= min_night_temp + 5:
-        score += 0.5
-        print(f"Good night temp (+0.5): {night_temp}°F >= {min_night_temp + 5}°F")
-    else:
-        print(f"Basic night temp (0): {night_temp}°F")
+    if night_temp < min_night_temp:
+        score -= 1.5
+        print(f"Night temp below minimum (-1.5): {night_temp}°F < {min_night_temp}°F")
     
-    # Wind rating (0-1 flamingo)
+    # Wind rating (can lose up to 1 flamingo)
     day_wind = float(day_period['windSpeed'].split()[0])
-    if day_wind <= max_wind - 7:  # Light breeze
-        score += 1
-        print(f"Light wind (+1): {day_wind} mph <= {max_wind - 7} mph")
-    else:
-        print(f"Moderate/strong wind (0): {day_wind} mph")
+    if day_wind > max_wind:
+        score -= 1.0
+        print(f"Wind above maximum (-1.0): {day_wind} mph > {max_wind} mph")
     
-    # Conditions rating (0-1.5 flamingos)
+    # Conditions rating (can lose up to 1 flamingo)
     conditions = day_period['shortForecast'].lower()
-    if 'sunny' in conditions and not any(x in conditions for x in ['scattered', 'rain', 'shower']):
-        score += 1.5
-        print("Perfect sunny day (+1.5)")
-    elif 'mostly sunny' in conditions and not any(x in conditions for x in ['scattered', 'rain', 'shower']):
-        score += 1
-        print("Almost perfect sunny day (+1)")
-    elif 'partly sunny' in conditions and not any(x in conditions for x in ['scattered', 'rain', 'shower']):
-        score += 0.5
-        print("Partly sunny day (+0.5)")
-    elif 'clear' in conditions:
-        score += 0.5
-        print("Clear day (+0.5)")
-    elif ('scattered' in conditions and ('rain' in conditions or 'shower' in conditions)):
-        score += 0.25
-        print("Scattered rain day (+0.25)")
-    else:
-        print(f"Other conditions (0): {conditions}")
+    if any(x in conditions for x in ['rain', 'shower', 'storm', 'thunder']):
+        score -= 1.0
+        print("Poor conditions - rain/storms (-1.0)")
+    elif any(x in conditions for x in ['cloudy', 'overcast']):
+        score -= 0.5
+        print("Suboptimal conditions - cloudy (-0.5)")
     
-    # Round to nearest 0.5
+    # Round to nearest 0.5 and ensure score is between 0 and 5
     score = round(score * 2) / 2
+    score = max(0, min(5, score))
     
-    # Add minimum 1 flamingo if it meets basic requirements
-    if score < 1 and is_sunbathing_day([day_period], criteria):
-        score = 1
-        print("Minimum score applied (+1)")
-    
-    print(f"Final flamingo score: {score}")
+    print(f"Final flamingo rating: {score}")
     return score
 
 def get_day_evaluation(day_periods, criteria):
     """Get a detailed evaluation of the entire day for sunbathing."""
-    # Find the day and night periods
     day_period = None
     night_period = None
     for label, period in day_periods:
@@ -237,59 +208,73 @@ def get_day_evaluation(day_periods, criteria):
             night_period = period
     
     if not day_period or not night_period:
-        return ["⚠️ Incomplete day/night data"]
+        return {
+            'rating': 0,
+            'flamingo_explanation': "Unable to rate - missing day or night data",
+            'day_period': day_period,
+            'night_period': night_period
+        }
     
+    # Track deductions and explanations
+    deductions = []
     min_day_temp = criteria.get('min_day_temp', DEFAULT_CRITERIA['min_day_temp'])
     min_night_temp = criteria.get('min_night_temp', DEFAULT_CRITERIA['min_night_temp'])
     max_wind = criteria.get('max_wind', DEFAULT_CRITERIA['max_wind'])
     
-    evaluation = []
+    # Start with perfect score
+    score = 5.0
     
-    # Day temperature evaluation
+    # Day temperature assessment
     day_temp = float(day_period['temperature'])
-    if day_temp >= min_day_temp + 15:
-        evaluation.append("🌡️ Perfect daytime temperature!")
-    elif day_temp >= min_day_temp + 7:
-        evaluation.append("🌡️ Very comfortable daytime temperature")
-    elif day_temp >= min_day_temp:
-        evaluation.append("🌡️ Daytime temperature meets minimum requirements")
-    else:
-        evaluation.append("❄️ Too cold during the day for sunbathing")
+    if day_temp < min_day_temp:
+        score -= 1.5
+        deductions.append(f"🌡️ Day temperature is {day_temp}°F, which is below the minimum {min_day_temp}°F (-1.5 flamingos)")
     
-    # Night temperature evaluation
+    # Night temperature assessment
     night_temp = float(night_period['temperature'])
-    if night_temp >= min_night_temp + 5:
-        evaluation.append("🌙 Perfect night temperature!")
-    elif night_temp >= min_night_temp:
-        evaluation.append("🌙 Comfortable night temperature")
-    else:
-        evaluation.append("🌙 Too cold at night")
+    if night_temp < min_night_temp:
+        score -= 1.5
+        deductions.append(f"🌙 Night temperature drops to {night_temp}°F, below the minimum {min_night_temp}°F (-1.5 flamingos)")
     
-    # Wind evaluation
+    # Wind assessment
     day_wind = float(day_period['windSpeed'].split()[0])
-    if day_wind <= max_wind - 7:
-        evaluation.append("🍃 Perfect light breeze")
-    elif day_wind <= max_wind:
-        evaluation.append("💨 Acceptable wind conditions")
-    else:
-        evaluation.append("🌪️ Too windy for comfort")
+    if day_wind > max_wind:
+        score -= 1.0
+        deductions.append(f"💨 Wind speed of {day_wind} mph is too strong for comfortable sunbathing (-1.0 flamingos)")
     
-    # Sun conditions evaluation
+    # Conditions assessment
     conditions = day_period['shortForecast'].lower()
-    if 'sunny' in conditions and 'scattered' not in conditions:
-        evaluation.append("☀️ Perfect sunny conditions!")
-    elif 'mostly sunny' in conditions and 'scattered' not in conditions:
-        evaluation.append("🌤️ Very good sun exposure")
-    elif 'partly sunny' in conditions or 'partly cloudy' in conditions:
-        evaluation.append("⛅ Moderate sun exposure")
-    elif 'clear' in conditions:
-        evaluation.append("🌅 Clear skies")
-    elif 'scattered' in conditions:
-        evaluation.append("🌦️ Scattered rain conditions")
-    else:
-        evaluation.append("☁️ Not ideal sun conditions")
+    if any(x in conditions for x in ['rain', 'shower', 'storm', 'thunder']):
+        score -= 1.0
+        deductions.append(f"🌧️ Weather conditions show {day_period['shortForecast']} - not suitable for sunbathing (-1.0 flamingos)")
+    elif any(x in conditions for x in ['cloudy', 'overcast']):
+        score -= 0.5
+        deductions.append(f"☁️ {day_period['shortForecast']} - limited sun exposure (-0.5 flamingos)")
     
-    return evaluation
+    # Round to nearest 0.5 and ensure score is between 0 and 5
+    score = round(score * 2) / 2
+    score = max(0, min(5, score))
+    
+    # Create the explanation
+    if score == 5:
+        explanation = "🏆 Perfect sunbathing conditions! All parameters are ideal:\n"
+        explanation += f"• Day temperature: {day_temp}°F (perfect)\n"
+        explanation += f"• Night temperature: {night_temp}°F (perfect)\n"
+        explanation += f"• Wind speed: {day_wind} mph (perfect)\n"
+        explanation += f"• Weather: {day_period['shortForecast']} (perfect)"
+    else:
+        explanation = f"This day gets {score} out of 5 flamingos.\n\n"
+        if deductions:
+            explanation += "Here's why:\n• " + "\n• ".join(deductions)
+        else:
+            explanation += "Some conditions are not quite perfect."
+    
+    return {
+        'rating': score,
+        'flamingo_explanation': explanation,
+        'day_period': day_period,
+        'night_period': night_period
+    }
 
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
@@ -420,68 +405,60 @@ HTML_TEMPLATE = r"""
             color: white;
             border-color: #ff69b4;
         }
-        .flamingo-display {
-            text-align: center;
-            padding: 10px;
-            font-size: 2.5em;
-            margin: 10px 0;
-            min-height: 60px;
-        }
-        .flamingo-display .no-sunbathing {
-            font-size: 0.5em;
-            color: #666;
-        }
-        .day-container {
+        
+        .day-forecast {
             margin: 30px 0;
             border: 2px solid #ffb6c1;
             border-radius: 10px;
             overflow: hidden;
         }
+        
         .day-header {
             background-color: #fff0f5;
             padding: 15px;
             border-bottom: 2px solid #ffb6c1;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .day-title {
+        
+        .date {
             font-size: 1.5em;
             font-weight: bold;
             color: #ff69b4;
-            margin-bottom: 15px;
         }
-        .periods-container {
-            display: flex;
-            gap: 20px;
+        
+        .flamingo-rating {
+            font-size: 2.5em;
+        }
+        
+        .conditions {
             padding: 20px;
+            background: white;
         }
-        .period-details {
-            flex: 1;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #fff0f5;
-        }
-        .period-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #ff69b4;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .weather-stats {
-            background-color: white;
+        
+        .flamingo-explanation {
+            background: #fff0f5;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
+            border-left: 4px solid #ff69b4;
         }
-        .weather-stat {
+        
+        .day-conditions, .night-conditions {
             margin: 10px 0;
+            padding: 10px;
+            background: #fff0f5;
+            border-radius: 6px;
         }
+        
         .detailed-forecast {
             font-style: italic;
             color: #666;
-            line-height: 1.4;
+            margin-top: 10px;
             font-size: 0.9em;
         }
+        
         .location-name {
             font-size: 1.4em;
             font-weight: 600;
@@ -491,15 +468,24 @@ HTML_TEMPLATE = r"""
             border-bottom: 2px solid #ffb6c1;
             text-align: center;
         }
+        
         .loading {
             display: none;
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            z-index: 1000;
             color: #ff69b4;
         }
+        
         .loading.active {
-            display: block;
+            display: flex;
         }
     </style>
 </head>
@@ -571,43 +557,33 @@ HTML_TEMPLATE = r"""
             <div class="location-results">
                 <div class="location-name">{{ location }}</div>
                 {% for day in days %}
-                    {% set flamingo_rating = calculate_day_flamingo_rating(day.periods, criteria)|round|int %}
-                    <div class="day-container">
-                        <div class="day-header">
-                            <div class="day-title">{{ day.date }}</div>
-                            <div class="flamingo-display">
-                                {% if flamingo_rating > 0 %}
-                                    {{ "🦩" * flamingo_rating }}
-                                {% else %}
-                                    <div class="no-sunbathing">
-                                        ❌ Not ideal for sunbathing
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="periods-container">
-                            {% for period_label, period in day.periods %}
-                                <div class="period-details">
-                                    <div class="period-title">{{ period_label }}</div>
-                                    <div class="weather-stats">
-                                        <div class="weather-stat">
-                                            <strong>Temperature:</strong> {{ period.temperature }}°{{ period.temperatureUnit }}
-                                        </div>
-                                        <div class="weather-stat">
-                                            <strong>Wind:</strong> {{ period.windSpeed }} {{ period.windDirection }}
-                                        </div>
-                                        <div class="weather-stat">
-                                            <strong>Conditions:</strong> {{ period.shortForecast }}
-                                        </div>
-                                    </div>
-                                    <div class="detailed-forecast">
-                                        {{ period.detailedForecast }}
-                                    </div>
-                                </div>
-                            {% endfor %}
+                <div class="day-forecast">
+                    <div class="day-header">
+                        <div class="date">{{ day.date }}</div>
+                        <div class="flamingo-rating">
+                            {% for i in range(day.rating|int) %}🦩{% endfor %}
+                            {% if day.rating % 1 == 0.5 %}½🦩{% endif %}
                         </div>
                     </div>
+                    <div class="conditions">
+                        <div class="flamingo-explanation">
+                            {{ day.flamingo_explanation|replace('\n', '<br>')|safe }}
+                        </div>
+                        <div class="day-conditions">
+                            <strong>Day:</strong> {{ day.day_period.shortForecast }}
+                            ({{ day.day_period.temperature }}°{{ day.day_period.temperatureUnit }},
+                            {{ day.day_period.windSpeed }})
+                        </div>
+                        <div class="night-conditions">
+                            <strong>Night:</strong> {{ day.night_period.shortForecast }}
+                            ({{ day.night_period.temperature }}°{{ day.night_period.temperatureUnit }},
+                            {{ day.night_period.windSpeed }})
+                        </div>
+                        <div class="detailed-forecast">
+                            {{ day.day_period.detailedForecast }}
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
             </div>
             {% endfor %}
@@ -647,62 +623,64 @@ HTML_TEMPLATE = r"""
 </html>
 """
 
-@app.route("/", methods=["GET", "POST"])
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    if request.method == "POST":
-        # Get user criteria
-        user_criteria = {}
-        user_criteria['min_day_temp'] = int(request.form.get('min_day_temp', DEFAULT_CRITERIA['min_day_temp']))
-        user_criteria['min_night_temp'] = int(request.form.get('min_night_temp', DEFAULT_CRITERIA['min_night_temp']))
-        user_criteria['max_wind'] = int(request.form.get('max_wind', DEFAULT_CRITERIA['max_wind']))
-        user_criteria['allowed_conditions'] = request.form.getlist('conditions') or DEFAULT_CRITERIA['allowed_conditions']
+    if request.method == 'POST':
+        # Get user criteria from form
+        user_criteria = {
+            'min_day_temp': float(request.form.get('min_day_temp', DEFAULT_CRITERIA['min_day_temp'])),
+            'min_night_temp': float(request.form.get('min_night_temp', DEFAULT_CRITERIA['min_night_temp'])),
+            'max_wind': float(request.form.get('max_wind', DEFAULT_CRITERIA['max_wind'])),
+            'allowed_conditions': request.form.getlist('allowed_conditions') or DEFAULT_CRITERIA['allowed_conditions']
+        }
         
-        print("\nUser criteria:", user_criteria)
-
-        selected_locations = request.form.getlist("location")
-        if not selected_locations:
-            return "Please select at least one location."
-
         results = {}
-        for location in selected_locations:
-            if location == 'other':
-                lat = float(request.form.get('custom_lat'))
-                lon = float(request.form.get('custom_lon'))
-            elif location not in LOCATIONS:
-                continue
-            else:
-                lat = LOCATIONS[location]["lat"]
-                lon = LOCATIONS[location]["lon"]
-            
+        for location, coords in LOCATIONS.items():
+            lat, lon = coords['lat'], coords['lon']
             try:
                 forecast_data = get_forecast(lat, lon)
                 days = parse_next_3_days(forecast_data)
-                results[location] = days
+                results[location] = []
+                
+                for day in days:
+                    day_periods = []
+                    day_period = None
+                    night_period = None
+                    
+                    # Extract day and night periods
+                    for period_label, period in day['periods']:
+                        if period['isDaytime']:
+                            day_period = period
+                        else:
+                            night_period = period
+                    
+                    if day_period and night_period:
+                        evaluation = get_day_evaluation([(None, day_period), (None, night_period)], user_criteria)
+                        results[location].append({
+                            'date': day['date'],
+                            'rating': evaluation['rating'],
+                            'flamingo_explanation': evaluation['flamingo_explanation'],
+                            'day_period': evaluation['day_period'],
+                            'night_period': evaluation['night_period']
+                        })
             except Exception as e:
                 print(f"Error getting forecast for {location}: {e}")
                 continue
-
+        
         return render_template_string(
             HTML_TEMPLATE,
-            locations=LOCATIONS.keys(),
             results=results,
+            locations=LOCATIONS,
             criteria=user_criteria,
-            location=selected_locations[0],
-            custom_lat=request.form.get('custom_lat'),
-            custom_lon=request.form.get('custom_lon'),
-            is_sunbathing_day=is_sunbathing_day,
-            calculate_day_flamingo_rating=calculate_day_flamingo_rating,
-            get_day_evaluation=get_day_evaluation
+            default_criteria=DEFAULT_CRITERIA
         )
-
+    
     return render_template_string(
         HTML_TEMPLATE,
-        locations=LOCATIONS.keys(),
         results={},
+        locations=LOCATIONS,
         criteria=DEFAULT_CRITERIA,
-        is_sunbathing_day=is_sunbathing_day,
-        calculate_day_flamingo_rating=calculate_day_flamingo_rating,
-        get_day_evaluation=get_day_evaluation
+        default_criteria=DEFAULT_CRITERIA
     )
 
 if __name__ == "__main__":
