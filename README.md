@@ -2,50 +2,23 @@
 
 A smart weather app that helps you find the perfect conditions for sunbathing in Florida! The app uses the National Weather Service (NWS) API to fetch 7-day forecasts and evaluates conditions using our unique "Flamingo Rating" system.
 
-## 🦩 Flamingo Rating System
+## 🌞 Features
 
-The app rates each day's sunbathing conditions on a scale of 0-5 flamingos (🦩), considering:
-
-### Temperature Rating
-- **Minimum Temperature** (Default: 72°F)
-  - At or above minimum: Full points
-  - Within 5° below (67-71°F): -1 flamingo
-  - Within 10° below (62-66°F): -2 flamingos
-  - More than 10° below: ❌ No sunbathing
-
-- **Maximum Temperature** (Default: 85°F)
-  - At or below maximum: Full points
-  - Within 5° above (86-90°F): -1 flamingo
-  - Within 10° above (91-95°F): -2 flamingos
-  - More than 10° above: ❌ No sunbathing
-
-### Wind Speed Rating (Default max: 10 mph)
-- At or below maximum: Full points
-- Within 5 mph above (11-15 mph): -1 flamingo
-- Within 10 mph above (16-20 mph): -2 flamingos
-- More than 10 mph above: ❌ No sunbathing
-
-### Weather Conditions
-Three options to choose from:
-1. **Sunball**: Clear/sunny skies only
-2. **Clouds Okay**: Clear to mostly cloudy conditions
-3. **Just Not Rain**: Any non-rainy conditions
-
-The app intelligently handles "slight chance" conditions based on your preference.
-
-## 🌴 Supported Locations
-
-Currently supports major Florida cities:
-- Miami
-- Orlando
-- Tampa
-- Jacksonville
-- Key West
-- Fort Lauderdale
-- Daytona Beach
-- Fort Myers
-- Pensacola
-- Tallahassee
+- 7-day weather forecast for Florida locations
+- Flamingo rating system (0-5 flamingos) based on:
+  - Temperature (min/max thresholds)
+  - Wind speed
+  - Weather conditions
+- Smart weather condition icons (☀️, 🌤, ⛅️, etc.)
+- Wind speed indicators (🌫, 🍃, 💨)
+- Pre-configured Florida cities:
+  - Miami
+  - Fort Lauderdale
+  - West Palm Beach
+  - Naples
+  - Key West
+  - Tampa
+  - And more!
 
 ## 🚀 Getting Started
 
@@ -72,20 +45,23 @@ This app is configured for deployment on Cloudflare Pages:
 1. Connect your GitHub repository to Cloudflare Pages
 2. Configure build settings:
    - Build command: `pip install -r requirements.txt && gunicorn app:app`
-   - Build output directory: `/`
-3. Set environment variables in Cloudflare Pages dashboard:
-   - `USER_EMAIL`: Your email for the NWS API
-   - `PYTHON_VERSION`: `3.9`
+   - Environment variables:
+     - `USER_EMAIL`: Your email for the NWS API
+
+The app will automatically deploy when you push changes to your repository.
 
 ## 💻 Technical Details
 
 - Built with Flask
-- Uses National Weather Service (NWS) API
+- Uses National Weather Service (NWS) API for accurate forecasts
 - No API key required (just email for user agent)
 - Responsive design with modern UI
-- Double-click location selection
-- Real-time forecast evaluation
-- Deployed on Cloudflare Pages
+- Smart weather condition parsing with dynamic icons
+- Intelligent wind speed indicators
+- Customizable rating criteria:
+  - Temperature range (72-85°F default)
+  - Maximum wind speed (10 mph default)
+  - Acceptable weather conditions
 
 ## 📦 Dependencies
 
