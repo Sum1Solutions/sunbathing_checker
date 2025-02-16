@@ -75,6 +75,79 @@ DEFAULT_SUNBATHING_CRITERIA = {
     "required_condition": "clouds"
 }
 
+WEATHER_ICONS = {
+    'Sunny': '☀️',
+    'Clear': '☀️',
+    'Mostly Clear': '🌤',
+    'Partly Sunny': '🌤',
+    'Mostly Sunny': '🌤',
+    'Partly Cloudy': '⛅️',
+    'Mostly Cloudy': '🌥',
+    'Cloudy': '☁️',
+    'Rain': '🌧',
+    'Light Rain': '🌧',
+    'Showers': '🌧',
+    'Slight Chance Rain Showers': '🌦',
+    'Chance Rain Showers': '🌦',
+    'Thunderstorms': '⛈',
+    'Chance Thunderstorms': '⛈',
+    'Slight Chance Thunderstorms': '⛈',
+}
+
+def get_weather_icon(condition):
+    """Get the appropriate weather icon for a given condition."""
+    # Try exact match first
+    if condition in WEATHER_ICONS:
+        return WEATHER_ICONS[condition]
+    
+    # Try partial matches
+    condition_lower = condition.lower()
+    if 'sun' in condition_lower or 'clear' in condition_lower:
+        return '☀️'
+    elif 'cloud' in condition_lower:
+        if 'partly' in condition_lower:
+            return '⛅️'
+        elif 'mostly' in condition_lower:
+            return '🌥'
+        return '☁️'
+    elif 'rain' in condition_lower or 'shower' in condition_lower:
+        if 'slight chance' in condition_lower or 'chance' in condition_lower:
+            return '🌦'
+        return '🌧'
+    elif 'thunder' in condition_lower or 'storm' in condition_lower:
+        return '⛈'
+    
+    # Default to sun if we don't recognize the condition
+    return '☀️'
+
+def get_wind_icon(wind_speed_str):
+    """Get the appropriate wind icon based on wind speed."""
+    try:
+        # Extract the numeric value from strings like "5 mph" or "5 to 10 mph"
+        speed_parts = wind_speed_str.lower().split()
+        if 'to' in speed_parts:
+            # If range given (e.g., "5 to 10 mph"), use the higher number
+            speed = float(speed_parts[speed_parts.index('to') + 1])
+        else:
+            # If single speed given (e.g., "5 mph")
+            speed = float(speed_parts[0])
+            
+        # Return appropriate icon based on wind speed
+        if speed == 0:
+            return '🌫' # Calm
+        elif speed <= 5:
+            return '🍃' # Light breeze
+        elif speed <= 10:
+            return '💨' # Moderate breeze
+        elif speed <= 15:
+            return '🌪️' # Strong breeze
+        elif speed <= 20:
+            return '🌪️💨' # Very strong
+        else:
+            return '🌪️💨💨' # Extremely strong
+    except (ValueError, IndexError):
+        return '💨' # Default if parsing fails
+
 def get_forecast(lat, lon):
     points_url = f"https://api.weather.gov/points/{lat},{lon}"
     headers = {"User-Agent": USER_AGENT, "Accept": "application/geo+json"}
@@ -672,7 +745,7 @@ HTML_TEMPLATE = r"""
                     <div class="weather-details">
                         <div class="weather-item">
                             <div>Conditions</div>
-                            <strong>☀️ {{ day.day_period.shortForecast }}</strong>
+                            <strong>{{ get_weather_icon(day.day_period.shortForecast) }} {{ day.day_period.shortForecast }}</strong>
                         </div>
                         <div class="weather-item">
                             <div>Temperature</div>
@@ -680,7 +753,7 @@ HTML_TEMPLATE = r"""
                         </div>
                         <div class="weather-item">
                             <div>Wind Speed</div>
-                            <strong>💨 {{ day.day_period.windSpeed }}</strong>
+                            <strong>{{ get_wind_icon(day.day_period.windSpeed) }} {{ day.day_period.windSpeed }}</strong>
                         </div>
                     </div>
                 </div>
@@ -820,7 +893,9 @@ def home():
         message=message,
         results=results,
         cities=MAIN_CITIES,
-        form_data=form_data
+        form_data=form_data,
+        get_weather_icon=get_weather_icon,
+        get_wind_icon=get_wind_icon
     )
 
 if __name__ == "__main__":
