@@ -594,20 +594,23 @@ HTML_TEMPLATE = r"""
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
+        
         .rating-legend h3 {
             margin-top: 0;
             color: #2c5282;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 10px;
         }
+        
         .legend-items {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 10px;
         }
+        
         .legend-items div {
             padding: 8px;
             text-align: center;
@@ -617,19 +620,105 @@ HTML_TEMPLATE = r"""
             flex-direction: column;
             gap: 5px;
         }
+        
         .legend-items .rating-icons {
             font-size: 1.5rem;
         }
+        
         .legend-items .rating-text {
             font-size: 0.9rem;
             color: #4a5568;
         }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #ff69b4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-message {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #2c5282;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-message">
+                🌞 Checking the weather...
+                <div id="loadingText">Analyzing sunbathing conditions</div>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="header">
             <h1>☀️ Tracey's Sunbathing Forecaster 🦩</h1>
+        </div>
+
+        <div class="rating-legend">
+            <h3>🦩 Flamingo Rating Scale</h3>
+            <div class="legend-items">
+                <div>
+                    <span class="rating-icons">🦩🦩🦩🦩🦩</span>
+                    <span class="rating-text">Perfect conditions</span>
+                </div>
+                <div>
+                    <span class="rating-icons">🦩🦩🦩🦩</span>
+                    <span class="rating-text">Very good</span>
+                </div>
+                <div>
+                    <span class="rating-icons">🦩🦩🦩</span>
+                    <span class="rating-text">Good</span>
+                </div>
+                <div>
+                    <span class="rating-icons">🦩🦩</span>
+                    <span class="rating-text">Fair</span>
+                </div>
+                <div>
+                    <span class="rating-icons">🦩</span>
+                    <span class="rating-text">Poor</span>
+                </div>
+                <div>
+                    <span class="rating-icons">❌</span>
+                    <span class="rating-text">Not suitable</span>
+                </div>
+            </div>
         </div>
 
         <form method="POST" id="weatherForm">
@@ -680,35 +769,6 @@ HTML_TEMPLATE = r"""
 
             <button type="submit" class="submit-btn">Check Weather Forecast</button>
 
-            <div class="rating-legend">
-                <h3>🦩 Flamingo Rating Scale</h3>
-                <div class="legend-items">
-                    <div>
-                        <span class="rating-icons">🦩🦩🦩🦩🦩</span>
-                        <span class="rating-text">Perfect conditions</span>
-                    </div>
-                    <div>
-                        <span class="rating-icons">🦩🦩🦩🦩</span>
-                        <span class="rating-text">Very good</span>
-                    </div>
-                    <div>
-                        <span class="rating-icons">🦩🦩🦩</span>
-                        <span class="rating-text">Good</span>
-                    </div>
-                    <div>
-                        <span class="rating-icons">🦩🦩</span>
-                        <span class="rating-text">Fair</span>
-                    </div>
-                    <div>
-                        <span class="rating-icons">🦩</span>
-                        <span class="rating-text">Poor</span>
-                    </div>
-                    <div>
-                        <span class="rating-icons">❌</span>
-                        <span class="rating-text">Not suitable</span>
-                    </div>
-                </div>
-            </div>
         </form>
 
         {% if results %}
@@ -764,6 +824,41 @@ HTML_TEMPLATE = r"""
     </div>
 
     <script>
+        // Loading messages to cycle through
+        const loadingMessages = [
+            "Checking if the sun is feeling friendly...",
+            "Counting clouds in the sky...",
+            "Measuring the wind's enthusiasm...",
+            "Consulting with the flamingos...",
+            "Calculating optimal sunbathing angles...",
+            "Evaluating beach weather potential...",
+            "Determining flamingo rating...",
+            "Analyzing sunbathing conditions..."
+        ];
+        
+        let messageIndex = 0;
+        let messageInterval;
+        
+        function cycleLoadingMessage() {
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = loadingMessages[messageIndex];
+            messageIndex = (messageIndex + 1) % loadingMessages.length;
+        }
+        
+        function showLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+            messageIndex = 0;
+            cycleLoadingMessage();
+            messageInterval = setInterval(cycleLoadingMessage, 2000);
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'none';
+            clearInterval(messageInterval);
+        }
+        
         // Function to handle double-click on location options
         function handleLocationDoubleClick(e) {
             // Prevent the default double-click behavior
@@ -776,7 +871,8 @@ HTML_TEMPLATE = r"""
                     options[i].selected = options[i] === e.target;
                 }
                 
-                // Submit the form
+                // Show loading and submit form
+                showLoading();
                 document.getElementById('weatherForm').submit();
             }
         }
@@ -789,6 +885,14 @@ HTML_TEMPLATE = r"""
                 locationSelect.removeEventListener('dblclick', handleLocationDoubleClick);
                 // Add the event listener
                 locationSelect.addEventListener('dblclick', handleLocationDoubleClick);
+            }
+            
+            // Add submit handler to the form
+            const form = document.getElementById('weatherForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    showLoading();
+                });
             }
         }
 
