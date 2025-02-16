@@ -115,7 +115,7 @@ def is_acceptable_condition(condition, selected_conditions):
     if 'sunball' in selected_conditions:
         return any(word in condition for word in ['clear', 'sunny', 'mostly sunny'])
     elif 'clouds' in selected_conditions:
-        return any(word in condition for word in ['partly cloudy', 'mostly cloudy', 'overcast'])
+        return any(word in condition for word in ['clear', 'sunny', 'mostly sunny', 'partly cloudy', 'mostly cloudy'])
     elif 'rain' in selected_conditions:
         return 'rain' in condition
     return False
@@ -274,6 +274,34 @@ HTML_TEMPLATE = r"""
         .input-field-transition {
             transition: all 0.3s ease;
         }
+        .flamingo-rating {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .rating-scale {
+            display: grid;
+            grid-template-columns: repeat(6, auto);
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 8px;
+        }
+        .day-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .weather-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -299,11 +327,17 @@ HTML_TEMPLATE = r"""
                 </div>
                 <div style="margin-bottom: 10px;">
                     <label>Required Condition:</label>
-                    <select name="required_condition" class="input-field input-field-transition">
-                        <option value="sunball">Sunball</option>
-                        <option value="clouds">Clouds</option>
-                        <option value="rain">Rain</option>
-                    </select>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="radio" name="required_condition" value="sunball" checked> Sunball (Clear/Sunny)
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="radio" name="required_condition" value="clouds"> Clouds Okay (Including Clear/Partly/Mostly Cloudy)
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="radio" name="required_condition" value="rain"> Rain
+                        </label>
+                    </div>
                 </div>
             </div>
             <button type="submit" class="submit-btn">Check Weather</button>
@@ -314,6 +348,13 @@ HTML_TEMPLATE = r"""
         {% endif %}
         
         {% if results %}
+        <div class="rating-scale">
+            <div>❌ Not Suitable</div>
+            <div>🦩 Marginal</div>
+            <div>🦩🦩🦩 Good</div>
+            <div>🦩🦩🦩🦩🦩 Perfect!</div>
+        </div>
+        
         <div class="results">
             <h2>7 Day Weather and Evaluation</h2>
             <ul>
@@ -327,6 +368,16 @@ HTML_TEMPLATE = r"""
                     Evaluation: {% if day.is_great %}Great for sunbathing!{% else %}Not great for sunbathing.{% endif %}
                     <br>
                     Reason: {{ day.reason }}
+                    <br>
+                    <div class="flamingo-rating">
+                        {% if day.is_great %}
+                        🦩🦩🦩🦩🦩
+                        {% elif day.day_period.temperature >= 75 %}
+                        🦩🦩🦩
+                        {% else %}
+                        ❌
+                        {% endif %}
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
