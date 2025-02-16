@@ -69,9 +69,10 @@ DEFAULT_CRITERIA = {
 }
 
 DEFAULT_SUNBATHING_CRITERIA = {
-    "min_day_temp": 78,
-    "max_wind": 10,
-    "required_condition": "sunball"
+    "min_temp": 78,
+    "max_temp": 87,
+    "max_wind": 15,
+    "required_condition": "clouds"
 }
 
 def get_forecast(lat, lon):
@@ -181,17 +182,35 @@ def is_acceptable_condition(condition, selected_conditions):
     
     return False
 
-def evaluate_temperature(temp, min_temp):
-    """Evaluate temperature and return rating level:
-    3 = meets or exceeds minimum
-    2 = within 5 degrees of minimum (reduce final rating by 1)
-    1 = within 10 degrees of minimum (reduce final rating by 2)
-    0 = more than 10 degrees below minimum (X)"""
+def evaluate_min_temperature(temp, min_temp):
+    """
+    Evaluate minimum temperature and return rating level:
+        3 = meets or exceeds minimum
+        2 = within 5 degrees below minimum (reduce final rating by 1)
+        1 = within 10 degrees below minimum (reduce final rating by 2)
+        0 = more than 10 degrees below minimum (X)
+    """
     if temp >= min_temp:
         return 3
-    elif temp >= (min_temp - 5):
+    elif temp >= min_temp - 5:
         return 2
-    elif temp >= (min_temp - 10):
+    elif temp >= min_temp - 10:
+        return 1
+    return 0
+
+def evaluate_max_temperature(temp, max_temp):
+    """
+    Evaluate maximum temperature and return rating level:
+        3 = at or below maximum
+        2 = within 5 degrees above maximum (reduce final rating by 1)
+        1 = within 10 degrees above maximum (reduce final rating by 2)
+        0 = more than 10 degrees above maximum (X)
+    """
+    if temp <= max_temp:
+        return 3
+    elif temp <= max_temp + 5:
+        return 2
+    elif temp <= max_temp + 10:
         return 1
     return 0
 
@@ -216,13 +235,21 @@ def calculate_flamingo_rating(evaluation):
     # Start with 5 flamingos
     rating = 5
     
-    # Reduce rating based on temperature
-    if evaluation['temp_rating'] == 0:
+    # Reduce rating based on minimum temperature
+    if evaluation['min_temp_rating'] == 0:
         return 0  # Automatic fail if temp is too low
-    elif evaluation['temp_rating'] == 1:
+    elif evaluation['min_temp_rating'] == 1:
         rating -= 2  # -2 flamingos if temp is within 10° below min
-    elif evaluation['temp_rating'] == 2:
+    elif evaluation['min_temp_rating'] == 2:
         rating -= 1  # -1 flamingo if temp is within 5° below min
+    
+    # Reduce rating based on maximum temperature
+    if evaluation['max_temp_rating'] == 0:
+        return 0  # Automatic fail if temp is too high
+    elif evaluation['max_temp_rating'] == 1:
+        rating -= 2  # -2 flamingos if temp is within 10° above max
+    elif evaluation['max_temp_rating'] == 2:
+        rating -= 1  # -1 flamingo if temp is within 5° above max
     
     # Reduce rating based on wind speed
     if evaluation['wind_rating'] == 0:
@@ -239,13 +266,16 @@ def calculate_flamingo_rating(evaluation):
     return max(0, rating)  # Ensure rating doesn't go below 0
 
 def is_great_sunbathing_day(day_period, criteria):
-    temp_rating = evaluate_temperature(day_period['temperature'], criteria['min_temp'])
+    temp = day_period['temperature']
+    min_temp_rating = evaluate_min_temperature(temp, criteria['min_temp'])
+    max_temp_rating = evaluate_max_temperature(temp, criteria['max_temp'])
     wind_speed = parse_wind_speed(day_period['windSpeed'])
     wind_rating = evaluate_wind_speed(wind_speed, criteria['max_wind'])
     condition_ok = is_acceptable_condition(day_period['shortForecast'], criteria['required_condition'])
     
     evaluation = {
-        'temp_rating': temp_rating,
+        'min_temp_rating': min_temp_rating,
+        'max_temp_rating': max_temp_rating,
         'wind_rating': wind_rating,
         'condition_ok': condition_ok
     }
@@ -260,20 +290,29 @@ def evaluate_day_reason(day_period, criteria):
     try:
         temp = int(float(day_period['temperature']))
         wind_speed = parse_wind_speed(day_period['windSpeed'])
-        temp_rating = evaluate_temperature(temp, criteria['min_temp'])
+        min_temp_rating = evaluate_min_temperature(temp, criteria['min_temp'])
+        max_temp_rating = evaluate_max_temperature(temp, criteria['max_temp'])
         wind_rating = evaluate_wind_speed(wind_speed, criteria['max_wind'])
     except Exception as e:
         return "Error parsing weather data."
     
     reasons = []
     
-    # Temperature reasons
-    if temp_rating == 0:
+    # Minimum temperature reasons
+    if min_temp_rating == 0:
         reasons.append(f"temperature is too low ({temp}°F, more than 10° below minimum {criteria['min_temp']}°F)")
-    elif temp_rating == 1:
+    elif min_temp_rating == 1:
         reasons.append(f"temperature is low ({temp}°F, within 10° of minimum {criteria['min_temp']}°F, -2 flamingos)")
-    elif temp_rating == 2:
+    elif min_temp_rating == 2:
         reasons.append(f"temperature is slightly low ({temp}°F, within 5° of minimum {criteria['min_temp']}°F, -1 flamingo)")
+    
+    # Maximum temperature reasons
+    if max_temp_rating == 0:
+        reasons.append(f"temperature is too high ({temp}°F, more than 10° above maximum {criteria['max_temp']}°F)")
+    elif max_temp_rating == 1:
+        reasons.append(f"temperature is high ({temp}°F, within 10° of maximum {criteria['max_temp']}°F, -2 flamingos)")
+    elif max_temp_rating == 2:
+        reasons.append(f"temperature is slightly high ({temp}°F, within 5° of maximum {criteria['max_temp']}°F, -1 flamingo)")
     
     # Wind speed reasons
     if wind_rating == 0:
@@ -362,10 +401,26 @@ HTML_TEMPLATE = r"""
         .input-field {
             width: 100%;
             padding: 8px;
-            margin: 5px 0;
+            margin: 5px 0 15px 0;
             border: 1px solid #e2e8f0;
             border-radius: 5px;
             font-size: 16px;
+        }
+        .input-label {
+            display: block;
+            margin-top: 10px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        .temperature-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .temperature-input {
+            display: flex;
+            flex-direction: column;
         }
         .radio-group {
             display: flex;
@@ -421,31 +476,38 @@ HTML_TEMPLATE = r"""
             padding-bottom: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
+        .evaluation-section {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: -5px;
+        }
         .flamingo-rating {
             font-size: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            flex-shrink: 0;
+            min-width: 150px;
+            text-align: center;
+        }
+        .evaluation-reason {
+            color: #4a5568;
+            flex-grow: 1;
+            padding-top: 8px;
         }
         .weather-details {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             padding: 10px 0;
+            margin-top: 5px;
         }
         .weather-item {
             background: white;
             padding: 10px;
             border-radius: 5px;
             text-align: center;
-        }
-        .evaluation-reason {
-            background: #edf2f7;
-            padding: 12px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-style: italic;
-            color: #4a5568;
         }
         .location-select {
             cursor: pointer;
@@ -483,9 +545,16 @@ HTML_TEMPLATE = r"""
 
                 <div class="form-group">
                     <h3>🌡 Temperature & Wind</h3>
-                    <label>Minimum Temperature (°F):</label>
-                    <input type="number" name="min_temp" id="min_temp" value="{{ form_data.min_temp }}" min="0" max="120" class="input-field" required>
-                    
+                    <div class="temperature-group">
+                        <div class="temperature-input">
+                            <label class="input-label">Minimum Temperature (°F):</label>
+                            <input type="number" name="min_temp" id="min_temp" value="{{ form_data.min_temp }}" min="0" max="120" class="input-field" required>
+                        </div>
+                        <div class="temperature-input">
+                            <label class="input-label">Maximum Temperature (°F):</label>
+                            <input type="number" name="max_temp" id="max_temp" value="{{ form_data.max_temp }}" min="0" max="120" class="input-field" required>
+                        </div>
+                    </div>
                     <label>Maximum Wind Speed (mph):</label>
                     <input type="number" name="max_wind" id="max_wind" value="{{ form_data.max_wind }}" min="0" max="50" class="input-field" required>
                 </div>
@@ -520,6 +589,9 @@ HTML_TEMPLATE = r"""
                 <div class="day-card">
                     <div class="card-header">
                         <strong>{{ day.date }}</strong>
+                    </div>
+                    
+                    <div class="evaluation-section">
                         <div class="flamingo-rating">
                             {% if day.flamingo_rating == 5 %}
                             🦩🦩🦩🦩🦩
@@ -534,6 +606,9 @@ HTML_TEMPLATE = r"""
                             {% else %}
                             ❌
                             {% endif %}
+                        </div>
+                        <div class="evaluation-reason">
+                            {{ day.reason }}
                         </div>
                     </div>
                     
@@ -550,10 +625,6 @@ HTML_TEMPLATE = r"""
                             <div>Wind Speed</div>
                             <strong>💨 {{ day.day_period.windSpeed }}</strong>
                         </div>
-                    </div>
-                    
-                    <div class="evaluation-reason">
-                        📝 {{ day.reason }}
                     </div>
                 </div>
                 {% endfor %}
@@ -606,7 +677,8 @@ def home():
     message = None
     results = None
     form_data = {
-        "min_temp": DEFAULT_SUNBATHING_CRITERIA["min_day_temp"],
+        "min_temp": DEFAULT_SUNBATHING_CRITERIA["min_temp"],
+        "max_temp": DEFAULT_SUNBATHING_CRITERIA["max_temp"],
         "max_wind": DEFAULT_SUNBATHING_CRITERIA["max_wind"],
         "required_condition": DEFAULT_SUNBATHING_CRITERIA["required_condition"],
         "locations": []
@@ -615,12 +687,14 @@ def home():
     if request.method == "POST":
         try:
             locations = request.form.getlist("location")
-            min_temp = int(request.form.get("min_temp", DEFAULT_SUNBATHING_CRITERIA["min_day_temp"]))
+            min_temp = int(request.form.get("min_temp", DEFAULT_SUNBATHING_CRITERIA["min_temp"]))
+            max_temp = int(request.form.get("max_temp", DEFAULT_SUNBATHING_CRITERIA["max_temp"]))
             max_wind = int(request.form.get("max_wind", DEFAULT_SUNBATHING_CRITERIA["max_wind"]))
             required_condition = request.form.get("required_condition", DEFAULT_SUNBATHING_CRITERIA["required_condition"])
 
             form_data = {
                 "min_temp": min_temp,
+                "max_temp": max_temp,
                 "max_wind": max_wind,
                 "required_condition": required_condition,
                 "locations": locations
@@ -650,11 +724,13 @@ def home():
                                 
                                 evaluation = is_great_sunbathing_day(day_period, {
                                     "min_temp": min_temp,
+                                    "max_temp": max_temp,
                                     "max_wind": max_wind,
                                     "required_condition": required_condition
                                 })
                                 reason = evaluate_day_reason(day_period, {
                                     "min_temp": min_temp,
+                                    "max_temp": max_temp,
                                     "max_wind": max_wind,
                                     "required_condition": required_condition
                                 })
@@ -663,7 +739,8 @@ def home():
                                     "is_great": evaluation['is_great'],
                                     "reason": reason,
                                     "day_period": day_period,
-                                    "temp_rating": evaluation['temp_rating'],
+                                    "min_temp_rating": evaluation['min_temp_rating'],
+                                    "max_temp_rating": evaluation['max_temp_rating'],
                                     "wind_ok": evaluation['wind_rating'],
                                     "condition_ok": evaluation['condition_ok'],
                                     "flamingo_rating": evaluation['flamingo_rating']
