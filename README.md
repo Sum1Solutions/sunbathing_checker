@@ -1,26 +1,41 @@
 # Sunbathing Checker
 
-A weather forecasting app that helps you find the best days for sunbathing based on your preferences.
+A weather forecasting app that helps you find the best days for sunbathing based on your preferences. Uses the National Weather Service API to provide accurate 7-day forecasts for South Florida and Caribbean locations.
 
 ## Features
 
-- **Customizable Criteria**: Set your ideal temperature, wind speed, and weather conditions
-- **Condition Categories**: Choose from Sunball (clear/sunny), Clouds (partly/mostly cloudy), or Rain
-- **7-Day Forecast**: Get detailed weather predictions for the upcoming week
-- **Modern UI**: Clean, intuitive interface with responsive design
+- **Flamingo Rating System**: Intuitive 5-flamingo scale for weather quality:
+  - 🦩🦩🦩🦩🦩 Perfect conditions
+  - 🦩🦩🦩 Good conditions
+  - ❌ Not suitable
+- **Multi-Location Support**: Compare weather across multiple locations simultaneously
+- **Flexible Weather Conditions**:
+  - Sunball: Clear/sunny days only
+  - Clouds Okay: Accepts clear, partly cloudy, or mostly cloudy
+  - Just Not Rain: Accepts any conditions except rain
+- **Customizable Criteria**:
+  - Minimum temperature threshold
+  - Maximum wind speed limit
+  - Preferred weather conditions
 
 ## Recent Updates
 
-- Improved condition matching logic
-- Removed scoring system for simpler evaluation
-- Enhanced UI with better input fields and layout
+- Added intuitive flamingo rating system (❌ to 5 🦩)
+- Improved cloud condition handling - now accepts partly/mostly cloudy when "Clouds Okay" is selected
+- Enhanced UI with card-based layout and visual rating scale
+- Added multi-location selection support
 
 ## How to Use
 
-1. Select your location from the dropdown
-2. Set your preferred minimum temperature and maximum wind speed
-3. Choose your desired weather condition category
-4. View results and plan your sunbathing days!
+1. Select one or more locations from the list
+2. Set your weather preferences:
+   - Minimum temperature (default: 75°F)
+   - Maximum wind speed (default: 15 mph)
+3. Choose your weather condition preference:
+   - **Sunball**: Only clear/sunny days
+   - **Clouds Okay**: Accepts clear through mostly cloudy
+   - **Just Not Rain**: Any conditions except rain
+4. View the 7-day forecast with flamingo ratings!
 
 ## Installation
 
@@ -52,15 +67,16 @@ A weather forecasting app that helps you find the best days for sunbathing based
    ```bash
    python app.py
    ```
-   The app will be available at `http://localhost:5000`
+   Then visit `http://localhost:5000` in your browser.
 
-## Technologies Used
+## Weather Evaluation Criteria
 
-- **Flask**: Web framework for building the app.
-- **Requests**: For fetching weather data from the NWS API.
-- **HTML/CSS**: For rendering the user interface.
-- **python-dotenv**: For managing environment variables.
+The flamingo rating is determined by these factors:
+- **Temperature**: Must meet minimum threshold (default 75°F)
+- **Wind Speed**: Must be below maximum limit (default 15 mph)
+- **Weather Conditions**: Based on selected preference
+  - Sunball: Only clear/sunny conditions
+  - Clouds Okay: Accepts clear, partly cloudy, or mostly cloudy
+  - Just Not Rain: Any conditions without rain
 
-## License
-
-This project is licensed under the MIT License.
+Perfect conditions (🦩🦩🦩🦩🦩) require all criteria to be met.
