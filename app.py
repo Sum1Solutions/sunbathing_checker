@@ -69,9 +69,9 @@ DEFAULT_CRITERIA = {
 }
 
 DEFAULT_SUNBATHING_CRITERIA = {
-    "min_temp": 78,
-    "max_temp": 87,
-    "max_wind": 15,
+    "min_temp": 72,
+    "max_temp": 85,
+    "max_wind": 10,
     "required_condition": "clouds"
 }
 
@@ -440,18 +440,19 @@ HTML_TEMPLATE = r"""
             background: #edf2f7;
         }
         .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: #2c5282;
+            background-color: #ff69b4;
             color: white;
+            padding: 12px 24px;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
+            width: 100%;
             margin-top: 20px;
+            transition: background-color 0.2s;
         }
         .submit-btn:hover {
-            background: #2b6cb0;
+            background-color: #ff1493;
         }
         .location-results {
             background: white;
@@ -515,21 +516,47 @@ HTML_TEMPLATE = r"""
         .location-select option {
             padding: 8px;
         }
+        .rating-legend {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .rating-legend h3 {
+            margin-top: 0;
+            color: #2c5282;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .legend-items div {
+            padding: 8px;
+            text-align: center;
+            background: #f7fafc;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .legend-items .rating-icons {
+            font-size: 1.5rem;
+        }
+        .legend-items .rating-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>☀️ Tracey's Sunbathing Forecaster 🦩</h1>
-        </div>
-
-        <div class="rating-scale">
-            <div>🦩🦩🦩🦩🦩 Perfect: Meets all criteria perfectly</div>
-            <div>🦩🦩🦩🦩 Good: One minor issue</div>
-            <div>🦩🦩🦩 Fair: One major issue or two minor issues</div>
-            <div>🦩🦩 Marginal: Multiple issues</div>
-            <div>🦩 Borderline: Several significant issues</div>
-            <div>❌ Not Suitable: Conditions don't meet minimum requirements</div>
         </div>
 
         <form method="POST" id="weatherForm">
@@ -579,6 +606,36 @@ HTML_TEMPLATE = r"""
             </div>
 
             <button type="submit" class="submit-btn">Check Weather Forecast</button>
+
+            <div class="rating-legend">
+                <h3>🦩 Flamingo Rating Scale</h3>
+                <div class="legend-items">
+                    <div>
+                        <span class="rating-icons">🦩🦩🦩🦩🦩</span>
+                        <span class="rating-text">Perfect conditions</span>
+                    </div>
+                    <div>
+                        <span class="rating-icons">🦩🦩🦩🦩</span>
+                        <span class="rating-text">Very good</span>
+                    </div>
+                    <div>
+                        <span class="rating-icons">🦩🦩🦩</span>
+                        <span class="rating-text">Good</span>
+                    </div>
+                    <div>
+                        <span class="rating-icons">🦩🦩</span>
+                        <span class="rating-text">Fair</span>
+                    </div>
+                    <div>
+                        <span class="rating-icons">🦩</span>
+                        <span class="rating-text">Poor</span>
+                    </div>
+                    <div>
+                        <span class="rating-icons">❌</span>
+                        <span class="rating-text">Not suitable</span>
+                    </div>
+                </div>
+            </div>
         </form>
 
         {% if results %}

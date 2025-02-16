@@ -1,0 +1,8 @@
+name = "sunbathing-checker"
+type = "webpack"
+account_id = "" # You'll need to add your Cloudflare account ID here
+workers_dev = true
+
+[site]
+bucket = "./"
+entry-point = "workers-site"

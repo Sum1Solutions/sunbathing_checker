@@ -7,22 +7,22 @@ A smart weather app that helps you find the perfect conditions for sunbathing in
 The app rates each day's sunbathing conditions on a scale of 0-5 flamingos (🦩), considering:
 
 ### Temperature Rating
-- **Minimum Temperature** (Default: 78°F)
+- **Minimum Temperature** (Default: 72°F)
   - At or above minimum: Full points
-  - Within 5° below (73-77°F): -1 flamingo
-  - Within 10° below (68-72°F): -2 flamingos
+  - Within 5° below (67-71°F): -1 flamingo
+  - Within 10° below (62-66°F): -2 flamingos
   - More than 10° below: ❌ No sunbathing
 
-- **Maximum Temperature** (Default: 87°F)
+- **Maximum Temperature** (Default: 85°F)
   - At or below maximum: Full points
-  - Within 5° above (88-92°F): -1 flamingo
-  - Within 10° above (93-97°F): -2 flamingos
+  - Within 5° above (86-90°F): -1 flamingo
+  - Within 10° above (91-95°F): -2 flamingos
   - More than 10° above: ❌ No sunbathing
 
-### Wind Speed Rating (Default max: 15 mph)
+### Wind Speed Rating (Default max: 10 mph)
 - At or below maximum: Full points
-- Within 5 mph above (16-20 mph): -1 flamingo
-- Within 10 mph above (21-25 mph): -2 flamingos
+- Within 5 mph above (11-15 mph): -1 flamingo
+- Within 10 mph above (16-20 mph): -2 flamingos
 - More than 10 mph above: ❌ No sunbathing
 
 ### Weather Conditions
