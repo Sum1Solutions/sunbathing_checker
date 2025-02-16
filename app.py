@@ -140,11 +140,11 @@ def get_wind_icon(wind_speed_str):
         elif speed <= 10:
             return '💨' # Moderate breeze
         elif speed <= 15:
-            return '🌪️' # Strong breeze
+            return '💨💨' # Strong breeze
         elif speed <= 20:
-            return '🌪️💨' # Very strong
+            return '💨💨💨' # Very strong
         else:
-            return '🌪️💨💨' # Extremely strong
+            return '💨💨💨💨' # Extremely strong
     except (ValueError, IndexError):
         return '💨' # Default if parsing fails
 
