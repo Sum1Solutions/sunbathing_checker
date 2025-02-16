@@ -49,6 +49,8 @@ Currently supports major Florida cities:
 
 ## 🚀 Getting Started
 
+### Local Development
+
 1. Clone the repository
 2. Install dependencies:
    ```bash
@@ -56,12 +58,24 @@ Currently supports major Florida cities:
    ```
 3. Create a `.env` file with your email for the NWS API:
    ```
-   USER_AGENT_EMAIL=your.email@example.com
+   USER_EMAIL=your.email@example.com
    ```
 4. Run the app:
    ```bash
    python app.py
    ```
+
+### Deployment
+
+This app is configured for deployment on Cloudflare Pages:
+
+1. Connect your GitHub repository to Cloudflare Pages
+2. Configure build settings:
+   - Build command: `pip install -r requirements.txt && gunicorn app:app`
+   - Build output directory: `/`
+3. Set environment variables in Cloudflare Pages dashboard:
+   - `USER_EMAIL`: Your email for the NWS API
+   - `PYTHON_VERSION`: `3.9`
 
 ## 💻 Technical Details
 
@@ -71,13 +85,14 @@ Currently supports major Florida cities:
 - Responsive design with modern UI
 - Double-click location selection
 - Real-time forecast evaluation
+- Deployed on Cloudflare Pages
 
 ## 📦 Dependencies
 
-- Flask
-- Requests
-- Python-dotenv
-- Gunicorn (for production)
+- Flask (3.0.2)
+- Requests (2.32.2)
+- Python-dotenv (1.0.1)
+- Gunicorn (21.2.0)
 
 ## 🔒 Privacy
 
