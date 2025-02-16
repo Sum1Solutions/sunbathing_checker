@@ -1,82 +1,88 @@
-# Sunbathing Checker
+# 🌞 Sunbathing Weather Forecaster
 
-A weather forecasting app that helps you find the best days for sunbathing based on your preferences. Uses the National Weather Service API to provide accurate 7-day forecasts for South Florida and Caribbean locations.
+A smart weather app that helps you find the perfect conditions for sunbathing in Florida! The app uses the National Weather Service (NWS) API to fetch 7-day forecasts and evaluates conditions using our unique "Flamingo Rating" system.
 
-## Features
+## 🦩 Flamingo Rating System
 
-- **Flamingo Rating System**: Intuitive 5-flamingo scale for weather quality:
-  - 🦩🦩🦩🦩🦩 Perfect conditions
-  - 🦩🦩🦩 Good conditions
-  - ❌ Not suitable
-- **Multi-Location Support**: Compare weather across multiple locations simultaneously
-- **Flexible Weather Conditions**:
-  - Sunball: Clear/sunny days only
-  - Clouds Okay: Accepts clear, partly cloudy, or mostly cloudy
-  - Just Not Rain: Accepts any conditions except rain
-- **Customizable Criteria**:
-  - Minimum temperature threshold
-  - Maximum wind speed limit
-  - Preferred weather conditions
+The app rates each day's sunbathing conditions on a scale of 0-5 flamingos (🦩), considering:
 
-## Recent Updates
+### Temperature Rating
+- **Minimum Temperature** (Default: 78°F)
+  - At or above minimum: Full points
+  - Within 5° below (73-77°F): -1 flamingo
+  - Within 10° below (68-72°F): -2 flamingos
+  - More than 10° below: ❌ No sunbathing
 
-- Added intuitive flamingo rating system (❌ to 5 🦩)
-- Improved cloud condition handling - now accepts partly/mostly cloudy when "Clouds Okay" is selected
-- Enhanced UI with card-based layout and visual rating scale
-- Added multi-location selection support
+- **Maximum Temperature** (Default: 87°F)
+  - At or below maximum: Full points
+  - Within 5° above (88-92°F): -1 flamingo
+  - Within 10° above (93-97°F): -2 flamingos
+  - More than 10° above: ❌ No sunbathing
 
-## How to Use
+### Wind Speed Rating (Default max: 15 mph)
+- At or below maximum: Full points
+- Within 5 mph above (16-20 mph): -1 flamingo
+- Within 10 mph above (21-25 mph): -2 flamingos
+- More than 10 mph above: ❌ No sunbathing
 
-1. Select one or more locations from the list
-2. Set your weather preferences:
-   - Minimum temperature (default: 75°F)
-   - Maximum wind speed (default: 15 mph)
-3. Choose your weather condition preference:
-   - **Sunball**: Only clear/sunny days
-   - **Clouds Okay**: Accepts clear through mostly cloudy
-   - **Just Not Rain**: Any conditions except rain
-4. View the 7-day forecast with flamingo ratings!
+### Weather Conditions
+Three options to choose from:
+1. **Sunball**: Clear/sunny skies only
+2. **Clouds Okay**: Clear to mostly cloudy conditions
+3. **Just Not Rain**: Any non-rainy conditions
 
-## Installation
+The app intelligently handles "slight chance" conditions based on your preference.
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Sum1Solutions/sunbathing_checker.git
-   cd sunbathing_checker
-   ```
+## 🌴 Supported Locations
 
-2. Create and activate a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-   ```
+Currently supports major Florida cities:
+- Miami
+- Orlando
+- Tampa
+- Jacksonville
+- Key West
+- Fort Lauderdale
+- Daytona Beach
+- Fort Myers
+- Pensacola
+- Tallahassee
 
-3. Install dependencies:
+## 🚀 Getting Started
+
+1. Clone the repository
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-
-4. Set up environment variables:
-   - Copy `.env.example` to `.env` (or create a new `.env` file)
-   - Update `USER_EMAIL` in `.env` with your email address:
-     ```
-     USER_EMAIL=your.email@example.com
-     ```
-
-5. Run the application:
+3. Create a `.env` file with your email for the NWS API:
+   ```
+   USER_AGENT_EMAIL=your.email@example.com
+   ```
+4. Run the app:
    ```bash
    python app.py
    ```
-   Then visit `http://localhost:5000` in your browser.
 
-## Weather Evaluation Criteria
+## 💻 Technical Details
 
-The flamingo rating is determined by these factors:
-- **Temperature**: Must meet minimum threshold (default 75°F)
-- **Wind Speed**: Must be below maximum limit (default 15 mph)
-- **Weather Conditions**: Based on selected preference
-  - Sunball: Only clear/sunny conditions
-  - Clouds Okay: Accepts clear, partly cloudy, or mostly cloudy
-  - Just Not Rain: Any conditions without rain
+- Built with Flask
+- Uses National Weather Service (NWS) API
+- No API key required (just email for user agent)
+- Responsive design with modern UI
+- Double-click location selection
+- Real-time forecast evaluation
 
-Perfect conditions (🦩🦩🦩🦩🦩) require all criteria to be met.
+## 📦 Dependencies
+
+- Flask
+- Requests
+- Python-dotenv
+- Gunicorn (for production)
+
+## 🔒 Privacy
+
+The app only requires an email address for the NWS API user agent. No personal data is collected or stored.
+
+## 🤝 Contributing
+
+Feel free to open issues or submit pull requests with improvements!
