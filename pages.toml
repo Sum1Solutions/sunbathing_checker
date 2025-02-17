@@ -1,8 +1,13 @@
 [build]
-command = "pip install -r requirements.txt.lock && gunicorn app:app --workers 2"
+command = "pip install -r requirements.txt.lock && gunicorn app:app --workers 2 --bind 0.0.0.0:8080"
 python_version = "3.9"
 
 [build.environment]
 PYTHON_ENABLE_WHEEL_CACHE = "1"
 PIP_DISABLE_PIP_VERSION_CHECK = "1"
 PIP_NO_CLEAN = "1"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
