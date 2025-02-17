@@ -1,0 +1,6 @@
+name = "sunbathing-checker"
+main = "src/worker.js"
+compatibility_date = "2024-02-16"
+
+[vars]
+USER_EMAIL = ""  # Will be set in Cloudflare's dashboard

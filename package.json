@@ -1,0 +1,14 @@
+{
+  "name": "sunbathing-checker",
+  "version": "1.0.0",
+  "description": "Florida Sunbathing Weather Checker",
+  "main": "src/worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
