@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:8080 app:app
+web: gunicorn -c gunicorn.conf.py app:app
