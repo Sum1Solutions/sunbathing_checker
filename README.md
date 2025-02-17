@@ -2,11 +2,36 @@
 
 A smart weather app that helps you find the perfect conditions for sunbathing in Florida! The app uses the National Weather Service (NWS) API to fetch 7-day forecasts and evaluates conditions using our unique "Flamingo Rating" system.
 
+## 🌟 Project Status
+
+This project has two implementations:
+
+### Python Version (Main Branch)
+- ✅ Fully functional Flask implementation
+- ✅ Running successfully locally
+- ❌ Not compatible with Cloudflare Pages (Python not supported)
+- 🔄 Currently on the `main` branch
+
+### NPM Version (NPM Branch)
+- ✅ Cloudflare Workers implementation
+- 🚧 Work in progress
+- ✅ Compatible with Cloudflare Pages
+- 🔄 Available on the `npm` branch
+
+To switch between versions:
+```bash
+# For Python version
+git checkout main
+
+# For NPM version
+git checkout npm
+```
+
 ## 🌞 Features
 
 - 7-day weather forecast for Florida locations
-- Flamingo rating system (0-5 flamingos) based on:
-  - Temperature (min/max thresholds)
+- Flamingo rating system (0-10 flamingos) based on:
+  - Temperature (optimal range: 75-85°F)
   - Wind speed
   - Weather conditions
 - Smart weather condition icons (☀️, 🌤, ⛅️, etc.)
@@ -22,7 +47,7 @@ A smart weather app that helps you find the perfect conditions for sunbathing in
 
 ## 🚀 Getting Started
 
-### Local Development
+### Python Version (Main Branch)
 
 1. Clone the repository
 2. Create and activate a virtual environment:
@@ -32,11 +57,7 @@ A smart weather app that helps you find the perfect conditions for sunbathing in
    ```
 3. Install dependencies:
    ```bash
-   # For development:
    pip install -r requirements.txt
-   
-   # For exact versions:
-   pip install -r requirements.txt.lock
    ```
 4. Create a `.env` file with your email for the NWS API:
    ```
@@ -47,47 +68,52 @@ A smart weather app that helps you find the perfect conditions for sunbathing in
    python app.py
    ```
 
-### Deployment on Cloudflare Pages
+### NPM Version (NPM Branch)
 
-1. Connect your GitHub repository to Cloudflare Pages
-2. Configure build settings:
-   - Build command: `pip install -r requirements.txt.lock && gunicorn app:app --workers 2`
-   - Environment variables:
-     - `USER_EMAIL`: Your email for the NWS API
-   - Python version: 3.9
-
-The app will automatically deploy when you push changes to your repository.
+1. Switch to the NPM branch:
+   ```bash
+   git checkout npm
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.dev.vars` file with your email:
+   ```
+   USER_EMAIL=your.email@example.com
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
 ## 💻 Technical Details
 
+### Python Version
 - Built with Flask 3.1.0
-- Uses National Weather Service (NWS) API for accurate forecasts
+- Uses National Weather Service (NWS) API
 - No API key required (just email for user agent)
 - Responsive design with modern UI
-- Smart weather condition parsing with dynamic icons
-- Intelligent wind speed indicators
-- Customizable rating criteria:
-  - Temperature range (72-85°F default)
-  - Maximum wind speed (10 mph default)
-  - Acceptable weather conditions
+
+### NPM Version
+- Built with Cloudflare Workers
+- Pure JavaScript implementation
+- Same features as Python version
+- Optimized for edge deployment
 
 ## 📦 Dependencies
 
-Core dependencies (see `requirements.txt.lock` for exact versions):
+### Python Version
+Core dependencies (see `requirements.txt` for exact versions):
 - Flask - Web framework
 - Requests - HTTP client for NWS API
 - Python-dotenv - Environment variable management
 - Gunicorn - Production WSGI server
 
-## 🔄 Development Workflow
-
-1. Make changes to the code
-2. Test locally using `python app.py`
-3. Commit and push changes
-4. Cloudflare Pages will automatically:
-   - Install dependencies from `requirements.txt.lock`
-   - Start the app with Gunicorn (2 workers)
-   - Deploy to the edge network
+### NPM Version
+Core dependencies (see `package.json`):
+- @cloudflare/workers-types
+- wrangler
 
 ## 🔒 Privacy
 
