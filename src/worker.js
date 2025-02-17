@@ -1,15 +1,18 @@
-const HEADERS = {
-  'User-Agent': `(sunbathing-checker, ${process.env.USER_EMAIL})`,
-  'Accept': 'application/geo+json'
-};
+async function getHeaders(env) {
+  return {
+    'User-Agent': `(sunbathing-checker, ${env.USER_EMAIL})`,
+    'Accept': 'application/geo+json'
+  };
+}
 
-async function getWeatherData(lat, lon) {
+async function getWeatherData(lat, lon, env) {
+  const headers = await getHeaders(env);
   const pointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
-  const pointsResponse = await fetch(pointsUrl, { headers: HEADERS });
+  const pointsResponse = await fetch(pointsUrl, { headers });
   const pointsData = await pointsResponse.json();
   
   const forecastUrl = pointsData.properties.forecast;
-  const forecastResponse = await fetch(forecastUrl, { headers: HEADERS });
+  const forecastResponse = await fetch(forecastUrl, { headers });
   const forecastData = await forecastResponse.json();
   
   return forecastData.properties.periods;
@@ -93,7 +96,7 @@ export default {
       const forecastMatch = url.pathname.match(/^\/forecast\/(-?\d+\.?\d*)\/(-?\d+\.?\d*)$/);
       if (forecastMatch) {
         const [_, lat, lon] = forecastMatch;
-        const periods = await getWeatherData(lat, lon);
+        const periods = await getWeatherData(lat, lon, env);
         
         // Add flamingo ratings
         const periodsWithRatings = periods.map(period => ({
