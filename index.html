@@ -391,23 +391,31 @@
             const dates = dateRanges[dateRange] || dateRanges['jan1-15'];
 
             try {
-                // Fetch weather and flights in parallel
+                // Fetch weather, flights, AND hotels in parallel
                 const weatherPromises = destinations.map(dest => fetchWeather(LOCATIONS[dest]));
                 const flightPromises = destinations.map(dest =>
                     searchFlights(departure, LOCATIONS[dest].airport, dates.start, dates.end)
                 );
+                const hotelPromises = destinations.map(dest =>
+                    searchHotels(LOCATIONS[dest].airport, dates.start, dates.end, maxBudget)
+                );
 
-                const [weatherResults, flightResults] = await Promise.all([
+                const [weatherResults, flightResults, hotelResults] = await Promise.all([
                     Promise.all(weatherPromises),
-                    Promise.all(flightPromises)
+                    Promise.all(flightPromises),
+                    Promise.all(hotelPromises)
                 ]);
 
                 // Combine results
                 const allResults = destinations.map((dest, i) => ({
                     location: LOCATIONS[dest],
+                    locationKey: dest,
                     weather: weatherResults[i],
                     flights: flightResults[i],
-                    deals: generateSampleDeals(LOCATIONS[dest].name, maxBudget, verificationLevel, searchCriteria)
+                    hotels: hotelResults[i],
+                    dates: dates,
+                    departure: departure,
+                    maxBudget: maxBudget
                 }));
 
                 displayResults(allResults, minWeather, searchCriteria);
@@ -445,6 +453,35 @@
                 }
             } catch (error) {
                 console.error('Flight search error:', error);
+                return [];
+            }
+        }
+
+        // Hotel search using Amadeus API via our Worker
+        async function searchHotels(cityCode, checkInDate, checkOutDate, maxPrice) {
+            try {
+                const response = await fetch(`${API_BASE}/api/hotels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cityCode,
+                        checkInDate,
+                        checkOutDate,
+                        adults: 1,
+                        maxPrice: parseInt(maxPrice) * 14 // Convert nightly to total (2 weeks)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.hotels) {
+                    return data.hotels;
+                } else {
+                    console.log('Hotel search note:', data.error || data.note);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Hotel search error:', error);
                 return [];
             }
         }
@@ -505,136 +542,46 @@
             return Math.max(0, Math.min(5, Math.round(score)));
         }
 
-        function generateSampleDeals(locationName, maxBudget, verificationLevel, searchCriteria) {
-            // In production, this would call rental/flight APIs
-            // For now, generate realistic sample data that matches search criteria
+        // Generate real search URLs for booking sites
+        function generateSearchLinks(locationName, dates, maxBudget, searchCriteria) {
+            const locationMap = {
+                'Naples': { airbnb: 'Naples--FL', vrbo: 'Naples,+Florida', lat: 26.1420, lon: -81.7948 },
+                'Fort Lauderdale': { airbnb: 'Fort-Lauderdale--FL', vrbo: 'Fort+Lauderdale,+Florida', lat: 26.1224, lon: -80.1373 },
+                'Miami': { airbnb: 'Miami--FL', vrbo: 'Miami,+Florida', lat: 25.7617, lon: -80.1918 },
+                'Key West': { airbnb: 'Key-West--FL', vrbo: 'Key+West,+Florida', lat: 24.5551, lon: -81.7800 },
+                'West Palm Beach': { airbnb: 'West-Palm-Beach--FL', vrbo: 'West+Palm+Beach,+Florida', lat: 26.7153, lon: -80.0534 }
+            };
 
-            const baseDeals = [];
+            const loc = locationMap[locationName] || locationMap['Miami'];
+            const checkin = dates?.start || '2025-01-01';
+            const checkout = dates?.end || '2025-01-15';
 
-            // Generate deals that match the criteria when provided
-            if (searchCriteria) {
-                if (searchCriteria.propertyType === 'condo' && searchCriteria.floors === 2 && searchCriteria.beachProximity) {
-                    baseDeals.push({
-                        type: 'rental',
-                        title: `Two-Story Beachfront Condo`,
-                        description: '2BR/2BA, steps to beach, recently renovated',
-                        source: 'Airbnb',
-                        price: Math.floor(Math.random() * 30) + 120,
-                        verified: true,
-                        matchScore: 95,
-                        features: ['beach', '2-floor', 'condo', 'clean'],
-                        verificationChecks: {
-                            addressExists: { pass: true, detail: 'Address verified via Google Maps' },
-                            hostHistory: { pass: true, detail: 'Superhost since 2019, 127 reviews' },
-                            priceCheck: { pass: true, detail: 'Within market range ($110-$160/night)' },
-                            photoCheck: { pass: true, detail: 'Photos verified, no reverse matches' },
-                            listingActive: { pass: true, detail: 'Listing confirmed active' }
-                        }
-                    });
-                }
+            // Build Airbnb URL with filters
+            let airbnbUrl = `https://www.airbnb.com/s/${loc.airbnb}/homes?checkin=${checkin}&checkout=${checkout}&price_max=${maxBudget}`;
+            if (searchCriteria?.pool) airbnbUrl += '&amenities%5B%5D=7'; // Pool amenity
+            if (searchCriteria?.beachProximity) airbnbUrl += '&l2_property_type_ids%5B%5D=1'; // Beachfront
 
-                if (searchCriteria.pool) {
-                    baseDeals.push({
-                        type: 'rental',
-                        title: `${searchCriteria.propertyType === 'condo' ? 'Condo' : 'Home'} with Pool Access`,
-                        description: 'Community pool, clean, well-maintained',
-                        source: 'VRBO',
-                        price: Math.floor(Math.random() * 40) + 100,
-                        verified: true,
-                        matchScore: 85,
-                        features: ['pool', 'clean'],
-                        verificationChecks: {
-                            addressExists: { pass: true, detail: 'Address verified via Google Maps' },
-                            hostHistory: { pass: true, detail: 'Verified owner, 89 reviews' },
-                            priceCheck: { pass: true, detail: 'Within market range' },
-                            photoCheck: { pass: true, detail: 'Original photos confirmed' },
-                            listingActive: { pass: true, detail: 'Listing confirmed active' }
-                        }
-                    });
-                }
-            }
+            // VRBO URL
+            const vrboUrl = `https://www.vrbo.com/search?destination=${loc.vrbo}&startDate=${checkin}&endDate=${checkout}&adults=2`;
 
-            // Default verified deals
-            baseDeals.push(
-                {
-                    type: 'rental',
-                    title: `Beachside 1BR Apartment`,
-                    description: 'Cozy apartment, 5 min walk to beach',
-                    source: 'Airbnb',
-                    price: Math.floor(Math.random() * 50) + 80,
-                    verified: true,
-                    matchScore: searchCriteria?.beachProximity ? 70 : 50,
-                    features: ['beach', 'apartment'],
-                    verificationChecks: {
-                        addressExists: { pass: true, detail: 'Address verified via Google Maps' },
-                        hostHistory: { pass: true, detail: 'Superhost since 2019, 127 reviews' },
-                        priceCheck: { pass: true, detail: 'Within market range ($85-$140/night)' },
-                        photoCheck: { pass: true, detail: 'Photos verified, no reverse matches' },
-                        listingActive: { pass: true, detail: 'Listing confirmed active' }
-                    }
-                },
-                {
-                    type: 'rental',
-                    title: `Downtown Studio with Pool`,
-                    description: 'Modern studio, pool in complex',
-                    source: 'VRBO',
-                    price: Math.floor(Math.random() * 40) + 70,
-                    verified: true,
-                    matchScore: searchCriteria?.pool ? 65 : 45,
-                    features: ['pool', 'studio'],
-                    verificationChecks: {
-                        addressExists: { pass: true, detail: 'Address verified via Google Maps' },
-                        hostHistory: { pass: true, detail: 'Verified owner, 89 reviews' },
-                        priceCheck: { pass: true, detail: 'Within market range' },
-                        photoCheck: { pass: true, detail: 'Original photos confirmed' },
-                        listingActive: { pass: true, detail: 'Listing confirmed active' }
-                    }
-                }
-            );
+            // Booking.com URL
+            const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida')}&checkin=${checkin}&checkout=${checkout}&nflt=price%3DUSD-0-${maxBudget}-1`;
 
-            // Always include a scam example (filtered by verification level)
-            baseDeals.push({
-                type: 'rental',
-                title: `AMAZING DEAL - Luxury Condo!!!`,
-                description: 'Too good to be true',
-                source: 'Craigslist',
-                price: 35,
-                verified: false,
-                scamLikely: true,
-                matchScore: 0,
-                features: [],
-                verificationChecks: {
-                    addressExists: { pass: false, detail: 'Address does not exist on Google Maps' },
-                    hostHistory: { pass: false, detail: 'No verifiable history' },
-                    priceCheck: { pass: false, detail: 'Price 70% below market - SUSPICIOUS' },
-                    photoCheck: { pass: false, detail: 'Photos found on 12 other listings' },
-                    listingActive: { pass: false, detail: 'Cannot verify listing exists' }
-                }
-            });
+            // Google Hotels URL
+            const googleUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(locationName + ' Florida')}?q=${encodeURIComponent(locationName + ' vacation rentals')}&dates=${checkin.replace(/-/g, '')}%2C${checkout.replace(/-/g, '')}`;
 
-            // Add flight option
-            baseDeals.push({
-                type: 'flight',
-                title: `Round trip from Boston`,
-                source: 'Google Flights',
-                price: Math.floor(Math.random() * 100) + 180,
-                verified: true,
-                airline: 'JetBlue',
-                verificationChecks: {
-                    carrier: { pass: true, detail: 'Major carrier, direct booking' },
-                    priceCheck: { pass: true, detail: 'Typical price range for route' }
-                }
-            });
+            return [
+                { name: 'Airbnb', url: airbnbUrl, icon: '🏠', color: '#FF5A5F' },
+                { name: 'VRBO', url: vrboUrl, icon: '🏡', color: '#3B5998' },
+                { name: 'Booking.com', url: bookingUrl, icon: '🏨', color: '#003580' },
+                { name: 'Google Hotels', url: googleUrl, icon: '🔍', color: '#4285F4' }
+            ];
+        }
 
-            // Filter and sort by match score
-            return baseDeals
-                .filter(deal => {
-                    if (deal.price > maxBudget && deal.type === 'rental') return false;
-                    if (verificationLevel === 'strict' && !deal.verified) return false;
-                    if (verificationLevel === 'moderate' && deal.scamLikely) return false;
-                    return true;
-                })
-                .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+        // Generate Google Flights URL
+        function getGoogleFlightsUrl(origin, destination, departureDate, returnDate) {
+            // Google Flights URL format
+            return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departureDate}%20returning%20${returnDate}`;
         }
 
         function displayResults(results, minWeather, searchCriteria) {
@@ -694,50 +641,64 @@
                             ${result.flights && result.flights.length > 0 ? `
                                 <div class="day-forecast" style="margin-bottom: 15px;">
                                     ${result.flights.slice(0, 3).map(flight => `
-                                        <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
-                                            <div style="font-weight: 600; color: #1565c0;">$${flight.price}</div>
-                                            <div style="font-size: 0.85em; margin: 5px 0;">
-                                                ${flight.itineraries[0]?.segments?.map(s => s.carrier + s.flightNumber).join(' → ') || 'Flight'}
+                                        <a href="https://www.google.com/travel/flights?q=flights+from+${result.departure}+to+${result.location.airport}" target="_blank" style="text-decoration: none;">
+                                            <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                <div style="font-weight: 600; color: #1565c0;">$${flight.price}</div>
+                                                <div style="font-size: 0.85em; margin: 5px 0; color: #333;">
+                                                    ${flight.itineraries[0]?.segments?.map(s => s.carrier + s.flightNumber).join(' → ') || 'Flight'}
+                                                </div>
+                                                <div style="font-size: 0.8em; color: #666;">
+                                                    ${flight.itineraries[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || ''}
+                                                </div>
+                                                <div style="font-size: 0.75em; color: #888; margin-top: 5px;">
+                                                    ${flight.seatsAvailable || '?'} seats • ${flight.bookingClass}
+                                                </div>
+                                                <span class="verification-badge verified" style="margin-top: 5px;">REAL DATA</span>
+                                                <div style="font-size: 0.7em; color: #1565c0; margin-top: 5px;">Click to book →</div>
                                             </div>
-                                            <div style="font-size: 0.8em; color: #666;">
-                                                ${flight.itineraries[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || ''}
-                                            </div>
-                                            <div style="font-size: 0.75em; color: #888; margin-top: 5px;">
-                                                ${flight.seatsAvailable || '?'} seats • ${flight.bookingClass}
-                                            </div>
-                                            <span class="verification-badge verified" style="margin-top: 5px;">AMADEUS</span>
-                                        </div>
+                                        </a>
                                     `).join('')}
                                 </div>
                             ` : `
                                 <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
-                                    No flights found (Amadeus sandbox has limited routes)
+                                    No flights found in Amadeus sandbox
+                                    <a href="https://www.google.com/travel/flights?q=flights+from+${result.departure}+to+${result.location.airport}+on+${result.dates.start}" target="_blank" style="color: #1565c0; margin-left: 10px;">Search Google Flights →</a>
                                 </p>
                             `}
 
-                            <h3 style="margin-top: 20px;">Verified Deals</h3>
-                            ${result.deals.map(deal => `
-                                <div class="deal-card ${deal.scamLikely ? 'danger' : (deal.verified ? '' : 'warning')}">
-                                    <div class="deal-info">
-                                        <h4>
-                                            ${deal.title}
-                                            <span class="verification-badge ${deal.scamLikely ? 'scam-warning' : (deal.verified ? 'verified' : 'unverified')}">
-                                                ${deal.scamLikely ? 'LIKELY SCAM' : (deal.verified ? 'VERIFIED' : 'UNVERIFIED')}
-                                            </span>
-                                            ${deal.matchScore && deal.matchScore > 60 ? `<span class="verification-badge" style="background: #e3f2fd; color: #1565c0;">${deal.matchScore}% match</span>` : ''}
-                                        </h4>
-                                        <p>${deal.source}${deal.airline ? ' - ' + deal.airline : ''}${deal.description ? ' - ' + deal.description : ''}</p>
-                                        <div class="verification-checks">
-                                            ${Object.entries(deal.verificationChecks).map(([key, val]) => `
-                                                <span class="check-item ${val.pass ? 'pass' : 'fail'}">
-                                                    ${val.pass ? '✓' : '✗'} ${val.detail}
-                                                </span>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                    <div class="deal-price">$${deal.price}${deal.type === 'rental' ? '/night' : ''}</div>
+                            <h3 style="margin-top: 20px;">Hotels (Real Amadeus Data)</h3>
+                            ${result.hotels && result.hotels.length > 0 ? `
+                                <div class="day-forecast" style="margin-bottom: 15px;">
+                                    ${result.hotels.slice(0, 4).map(hotel => `
+                                        <a href="https://www.google.com/travel/hotels?q=${encodeURIComponent(hotel.name + ' ' + result.location.name)}" target="_blank" style="text-decoration: none;">
+                                            <div class="day-card" style="min-width: 200px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                <div style="font-weight: 600; color: #333;">${hotel.name?.substring(0, 25) || 'Hotel'}${hotel.name?.length > 25 ? '...' : ''}</div>
+                                                ${hotel.pricePerNight ? `<div style="font-size: 1.2em; color: #28a745; margin: 5px 0;">$${hotel.pricePerNight}/night</div>` : ''}
+                                                ${hotel.rating ? `<div style="font-size: 0.85em; color: #f39c12;">${'★'.repeat(parseInt(hotel.rating))}${'☆'.repeat(5-parseInt(hotel.rating))}</div>` : ''}
+                                                <div style="font-size: 0.8em; color: #666; margin-top: 5px;">${hotel.roomType?.substring(0, 30) || 'Standard Room'}</div>
+                                                <span class="verification-badge verified" style="margin-top: 5px;">REAL DATA</span>
+                                                <div style="font-size: 0.7em; color: #1565c0; margin-top: 5px;">Click to book →</div>
+                                            </div>
+                                        </a>
+                                    `).join('')}
                                 </div>
-                            `).join('')}
+                            ` : `
+                                <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                                    No hotel availability in Amadeus sandbox for these dates
+                                </p>
+                            `}
+
+                            <h3 style="margin-top: 20px;">Search Vacation Rentals</h3>
+                            <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Click to search with your criteria pre-filled:</p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${generateSearchLinks(result.location.name, result.dates, result.maxBudget, searchCriteria).map(link => `
+                                    <a href="${link.url}" target="_blank" style="text-decoration: none;">
+                                        <div style="background: ${link.color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                                            ${link.icon} ${link.name}
+                                        </div>
+                                    </a>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                 `;
