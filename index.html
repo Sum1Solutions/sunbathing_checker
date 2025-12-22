@@ -624,23 +624,27 @@
             // VRBO URL
             const vrboUrl = `https://www.vrbo.com/search?destination=${loc.vrbo}&startDate=${checkin}&endDate=${checkout}&adults=2`;
 
-            // Booking.com URL - add beachfront filter if selected
-            let bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida')}&checkin=${checkin}&checkout=${checkout}&nflt=price%3DUSD-0-${priceNum}-1`;
-            if (hotelFilters?.luxuryBeach) bookingUrl += '%3Bbeachfront%3D1%3Bclass%3D4%3Bclass%3D5'; // 4-5 star beachfront
+            // Booking.com URL - use full location format for better matching
+            let bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida, United States')}&checkin=${checkin}&checkout=${checkout}`;
+            if (hotelFilters?.luxuryBeach) bookingUrl += '&nflt=class%3D4%3Bclass%3D5'; // 4-5 star
 
             // Google Hotels URL
             const googleUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(locationName + ' Florida')}?q=${encodeURIComponent(locationName + ' hotels')}&dates=${checkin.replace(/-/g, '')}%2C${checkout.replace(/-/g, '')}`;
 
-            // Marriott direct search (shows Bonvoy benefits)
-            const marriottUrl = `https://www.marriott.com/search/default.mi?destinationAddress.destination=${encodeURIComponent(locationName + ', FL')}&fromDate=${formatMarriottDate(checkin)}&toDate=${formatMarriottDate(checkout)}`;
+            // Marriott direct search (shows Bonvoy benefits) - use findhotels endpoint
+            const marriottUrl = `https://www.marriott.com/search/findHotels.mi?searchType=InCity&destinationAddress.city=${encodeURIComponent(locationName)}&destinationAddress.stateProvince=FL&destinationAddress.country=US&fromDate=${formatMarriottDate(checkin)}&toDate=${formatMarriottDate(checkout)}&flexibleDateSearch=false`;
 
-            // Luxury beachfront specific search
-            const luxuryBeachUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ' beach resort')}&checkin=${checkin}&checkout=${checkout}&nflt=class%3D5%3Bbeachfront%3D1`;
+            // Luxury beachfront specific search - use Booking.com with proper params
+            const luxuryBeachUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida, United States')}&checkin=${checkin}&checkout=${checkout}&class=5&nflt=class%3D5`;
+
+            // Hotels.com as additional option (good for rewards)
+            const hotelsComUrl = `https://www.hotels.com/Hotel-Search?destination=${encodeURIComponent(locationName + ', FL')}&startDate=${checkin}&endDate=${checkout}&adults=2`;
 
             const links = [
                 { name: 'Airbnb', url: airbnbUrl, icon: '🏠', color: '#FF5A5F' },
                 { name: 'VRBO', url: vrboUrl, icon: '🏡', color: '#3B5998' },
                 { name: 'Booking.com', url: bookingUrl, icon: '🏨', color: '#003580' },
+                { name: 'Hotels.com', url: hotelsComUrl, icon: '🛎️', color: '#D32F2F' },
                 { name: 'Google Hotels', url: googleUrl, icon: '🔍', color: '#4285F4' }
             ];
 
@@ -657,10 +661,10 @@
             return links;
         }
 
-        // Format date for Marriott (MM/DD/YYYY)
+        // Format date for Marriott (MM/DD/YYYY) - parse as local date to avoid timezone issues
         function formatMarriottDate(dateStr) {
-            const d = new Date(dateStr);
-            return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
         }
 
         // Generate Google Flights URL
