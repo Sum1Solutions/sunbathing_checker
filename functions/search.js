@@ -1,23 +1,143 @@
 // Cloudflare Worker for Sunball Finder
-// Handles natural language search + verification
+// Handles natural language search + verification + Amadeus flights
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // CORS headers for all responses
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
     if (url.pathname === '/api/search') {
-      return handleSearch(request, env);
+      return handleSearch(request, env, corsHeaders);
+    }
+
+    if (url.pathname === '/api/flights') {
+      return handleFlightSearch(request, env, corsHeaders);
     }
 
     if (url.pathname === '/api/verify') {
-      return handleVerify(request, env);
+      return handleVerify(request, env, corsHeaders);
     }
 
     return new Response('Not found', { status: 404 });
   }
 };
 
-async function handleSearch(request, env) {
+// Amadeus OAuth token cache
+let amadeusToken = null;
+let tokenExpiry = 0;
+
+async function getAmadeusToken(env) {
+  // Use cached token if still valid
+  if (amadeusToken && Date.now() < tokenExpiry) {
+    return amadeusToken;
+  }
+
+  const clientId = env.AMADEUS_CLIENT_ID || 'TxHvvDOaq7kAwF8e9CgrKmNIGblZnYKs';
+  const clientSecret = env.AMADEUS_CLIENT_SECRET || 'LJrvgjNbK4a6lgUC';
+
+  const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`
+  });
+
+  const data = await response.json();
+  amadeusToken = data.access_token;
+  tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Refresh 1 min early
+  return amadeusToken;
+}
+
+async function handleFlightSearch(request, env, corsHeaders) {
+  try {
+    const body = await request.json();
+    const { origin, destination, departureDate, returnDate, adults = 1 } = body;
+
+    const token = await getAmadeusToken(env);
+
+    // Search for flight offers
+    const searchUrl = new URL('https://test.api.amadeus.com/v2/shopping/flight-offers');
+    searchUrl.searchParams.set('originLocationCode', origin);
+    searchUrl.searchParams.set('destinationLocationCode', destination);
+    searchUrl.searchParams.set('departureDate', departureDate);
+    if (returnDate) searchUrl.searchParams.set('returnDate', returnDate);
+    searchUrl.searchParams.set('adults', adults.toString());
+    searchUrl.searchParams.set('max', '5'); // Limit results
+    searchUrl.searchParams.set('currencyCode', 'USD');
+
+    const flightResponse = await fetch(searchUrl.toString(), {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const flightData = await flightResponse.json();
+
+    if (flightData.errors) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: flightData.errors[0]?.detail || 'Flight search failed',
+        note: 'Using Amadeus sandbox - some routes may not have data'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Format flight offers for display
+    const flights = (flightData.data || []).map(offer => ({
+      id: offer.id,
+      price: parseFloat(offer.price.total),
+      currency: offer.price.currency,
+      itineraries: offer.itineraries.map(it => ({
+        duration: it.duration,
+        segments: it.segments.map(seg => ({
+          departure: {
+            airport: seg.departure.iataCode,
+            time: seg.departure.at
+          },
+          arrival: {
+            airport: seg.arrival.iataCode,
+            time: seg.arrival.at
+          },
+          carrier: seg.carrierCode,
+          flightNumber: seg.number,
+          duration: seg.duration
+        }))
+      })),
+      bookingClass: offer.travelerPricings?.[0]?.fareDetailsBySegment?.[0]?.cabin || 'ECONOMY',
+      seatsAvailable: offer.numberOfBookableSeats,
+      verified: true, // Real Amadeus data
+      source: 'Amadeus'
+    }));
+
+    return new Response(JSON.stringify({
+      success: true,
+      flights,
+      count: flights.length,
+      searchParams: { origin, destination, departureDate, returnDate }
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    });
+  }
+}
+
+async function handleSearch(request, env, corsHeaders) {
   const body = await request.json();
   const { description, dateRange, budget, departure } = body;
 
@@ -49,7 +169,7 @@ async function handleSearch(request, env) {
       reason: l.verificationFailReason
     }))
   }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
 }
 
@@ -218,7 +338,7 @@ async function searchVRBO(criteria, dateRange, budget) {
   return [];
 }
 
-async function handleVerify(request, env) {
+async function handleVerify(request, env, corsHeaders) {
   const body = await request.json();
   const { url } = body;
 
@@ -232,7 +352,7 @@ async function handleVerify(request, env) {
       return new Response(JSON.stringify({
         verified: false,
         reason: `Listing returned ${response.status}`
-      }), { headers: { 'Content-Type': 'application/json' }});
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
     }
 
     const html = await response.text();
@@ -243,12 +363,12 @@ async function handleVerify(request, env) {
     return new Response(JSON.stringify({
       verified: isRental,
       reason: isRental ? 'Listing appears active' : 'Could not confirm this is an active rental'
-    }), { headers: { 'Content-Type': 'application/json' }});
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
 
   } catch (error) {
     return new Response(JSON.stringify({
       verified: false,
       reason: `Error fetching listing: ${error.message}`
-    }), { headers: { 'Content-Type': 'application/json' }});
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
   }
 }

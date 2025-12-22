@@ -1,15 +1,13 @@
 name = "sunball-finder"
-main = "functions/search.js"
 compatibility_date = "2024-01-01"
 
-# For development - use Cloudflare Pages for the static site
-# The Worker handles /api/* routes
+# Pages Functions configuration
+pages_build_output_dir = "."
 
 [vars]
-# Add API keys as secrets via `wrangler secret put`
-# GOOGLE_MAPS_KEY = ""
+# Amadeus sandbox credentials (safe to include - sandbox only)
+AMADEUS_CLIENT_ID = "TxHvvDOaq7kAwF8e9CgrKmNIGblZnYKs"
+AMADEUS_CLIENT_SECRET = "LJrvgjNbK4a6lgUC"
 
-# Deploy with:
-# wrangler pages deploy . --project-name sunball-finder
-# Or for the worker API:
-# wrangler deploy
+# For production, set these via `wrangler pages secret put`:
+# GOOGLE_MAPS_KEY

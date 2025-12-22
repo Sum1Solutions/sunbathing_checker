@@ -249,8 +249,19 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Departure City</label>
-                    <input type="text" id="departure" placeholder="e.g., Boston, BOS" value="Boston">
+                    <label>Departure Airport</label>
+                    <select id="departure">
+                        <option value="BOS">Boston (BOS)</option>
+                        <option value="JFK">New York JFK</option>
+                        <option value="LGA">New York LGA</option>
+                        <option value="EWR">Newark (EWR)</option>
+                        <option value="PHL">Philadelphia (PHL)</option>
+                        <option value="DCA">Washington DC (DCA)</option>
+                        <option value="ORD">Chicago (ORD)</option>
+                        <option value="LAX">Los Angeles (LAX)</option>
+                        <option value="SFO">San Francisco (SFO)</option>
+                        <option value="ATL">Atlanta (ATL)</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Date Range</label>
@@ -310,12 +321,15 @@
 
     <script>
         const LOCATIONS = {
-            'naples': { name: 'Naples', lat: 26.1420, lon: -81.7948 },
-            'fort-lauderdale': { name: 'Fort Lauderdale', lat: 26.1224, lon: -80.1373 },
-            'miami': { name: 'Miami', lat: 25.7617, lon: -80.1918 },
-            'key-west': { name: 'Key West', lat: 24.5551, lon: -81.7800 },
-            'west-palm-beach': { name: 'West Palm Beach', lat: 26.7153, lon: -80.0534 }
+            'naples': { name: 'Naples', lat: 26.1420, lon: -81.7948, airport: 'RSW' },
+            'fort-lauderdale': { name: 'Fort Lauderdale', lat: 26.1224, lon: -80.1373, airport: 'FLL' },
+            'miami': { name: 'Miami', lat: 25.7617, lon: -80.1918, airport: 'MIA' },
+            'key-west': { name: 'Key West', lat: 24.5551, lon: -81.7800, airport: 'EYW' },
+            'west-palm-beach': { name: 'West Palm Beach', lat: 26.7153, lon: -80.0534, airport: 'PBI' }
         };
+
+        // API base URL (use relative for Pages Functions, or full URL for deployed Worker)
+        const API_BASE = window.location.hostname === 'localhost' ? '' : '';
 
         // Parse natural language description (mirrors Worker logic)
         function parseDescription(description) {
@@ -367,15 +381,31 @@
             // Parse the natural language description
             const searchCriteria = description ? parseDescription(description) : null;
 
-            try {
-                // Fetch weather for each destination
-                const weatherPromises = destinations.map(dest => fetchWeather(LOCATIONS[dest]));
-                const weatherResults = await Promise.all(weatherPromises);
+            // Parse date range to actual dates
+            const dateRanges = {
+                'jan1-15': { start: '2025-01-01', end: '2025-01-15' },
+                'jan15-31': { start: '2025-01-15', end: '2025-01-31' },
+                'feb1-15': { start: '2025-02-01', end: '2025-02-15' }
+            };
+            const dates = dateRanges[dateRange] || dateRanges['jan1-15'];
 
-                // For now, generate sample verified deals (would be API calls in production)
+            try {
+                // Fetch weather and flights in parallel
+                const weatherPromises = destinations.map(dest => fetchWeather(LOCATIONS[dest]));
+                const flightPromises = destinations.map(dest =>
+                    searchFlights(departure, LOCATIONS[dest].airport, dates.start, dates.end)
+                );
+
+                const [weatherResults, flightResults] = await Promise.all([
+                    Promise.all(weatherPromises),
+                    Promise.all(flightPromises)
+                ]);
+
+                // Combine results
                 const allResults = destinations.map((dest, i) => ({
                     location: LOCATIONS[dest],
                     weather: weatherResults[i],
+                    flights: flightResults[i],
                     deals: generateSampleDeals(LOCATIONS[dest].name, maxBudget, verificationLevel, searchCriteria)
                 }));
 
@@ -388,6 +418,35 @@
             loading.classList.remove('active');
             results.classList.add('active');
         });
+
+        // Flight search using Amadeus API via our Worker
+        async function searchFlights(origin, destination, departureDate, returnDate) {
+            try {
+                const response = await fetch(`${API_BASE}/api/flights`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin,
+                        destination,
+                        departureDate,
+                        returnDate,
+                        adults: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.flights) {
+                    return data.flights;
+                } else {
+                    console.log('Flight search note:', data.error || data.note);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Flight search error:', error);
+                return [];
+            }
+        }
 
         async function fetchWeather(location) {
             try {
@@ -629,6 +688,31 @@
                                     </div>
                                 `).join('') : '<p>Weather data unavailable</p>'}
                             </div>
+
+                            <h3 style="margin-top: 20px;">Flights to ${result.location.airport}</h3>
+                            ${result.flights && result.flights.length > 0 ? `
+                                <div class="day-forecast" style="margin-bottom: 15px;">
+                                    ${result.flights.slice(0, 3).map(flight => `
+                                        <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                            <div style="font-weight: 600; color: #1565c0;">$${flight.price}</div>
+                                            <div style="font-size: 0.85em; margin: 5px 0;">
+                                                ${flight.itineraries[0]?.segments?.map(s => s.carrier + s.flightNumber).join(' → ') || 'Flight'}
+                                            </div>
+                                            <div style="font-size: 0.8em; color: #666;">
+                                                ${flight.itineraries[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || ''}
+                                            </div>
+                                            <div style="font-size: 0.75em; color: #888; margin-top: 5px;">
+                                                ${flight.seatsAvailable || '?'} seats • ${flight.bookingClass}
+                                            </div>
+                                            <span class="verification-badge verified" style="margin-top: 5px;">AMADEUS</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                                    No flights found (Amadeus sandbox has limited routes)
+                                </p>
+                            `}
 
                             <h3 style="margin-top: 20px;">Verified Deals</h3>
                             ${result.deals.map(deal => `
