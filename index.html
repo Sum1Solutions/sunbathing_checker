@@ -428,8 +428,45 @@
             results.classList.add('active');
         });
 
-        // Flight search using Amadeus API via our Worker
+        // Flight search - tries Skyscanner first (better coverage), falls back to Amadeus
         async function searchFlights(origin, destination, departureDate, returnDate) {
+            // Try Skyscanner first (free RapidAPI, better route coverage)
+            try {
+                const ssResponse = await fetch(`${API_BASE}/api/skyscanner`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin,
+                        destination,
+                        departureDate,
+                        returnDate,
+                        adults: 1
+                    })
+                });
+
+                const ssData = await ssResponse.json();
+
+                if (ssData.success && ssData.flights?.length > 0) {
+                    console.log('Using Skyscanner data');
+                    return ssData.flights.map(f => ({
+                        ...f,
+                        source: 'Skyscanner',
+                        itineraries: [{
+                            duration: f.direct ? 'Direct' : 'Connecting',
+                            segments: [{
+                                departure: f.departure,
+                                arrival: f.arrival,
+                                carrier: f.carrier,
+                                flightNumber: ''
+                            }]
+                        }]
+                    }));
+                }
+            } catch (e) {
+                console.log('Skyscanner unavailable, trying Amadeus');
+            }
+
+            // Fall back to Amadeus
             try {
                 const response = await fetch(`${API_BASE}/api/flights`, {
                     method: 'POST',
@@ -641,28 +678,28 @@
                             ${result.flights && result.flights.length > 0 ? `
                                 <div class="day-forecast" style="margin-bottom: 15px;">
                                     ${result.flights.slice(0, 3).map(flight => `
-                                        <a href="https://www.google.com/travel/flights?q=flights+from+${result.departure}+to+${result.location.airport}" target="_blank" style="text-decoration: none;">
-                                            <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                <div style="font-weight: 600; color: #1565c0;">$${flight.price}</div>
+                                        <a href="${flight.bookingUrl || 'https://www.skyscanner.com/transport/flights/' + result.departure + '/' + result.location.airport + '/' + result.dates.start.replace(/-/g, '')}" target="_blank" style="text-decoration: none;">
+                                            <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, ${flight.source === 'Skyscanner' ? '#e8f5e9' : '#e3f2fd'} 0%, ${flight.source === 'Skyscanner' ? '#c8e6c9' : '#bbdefb'} 100%); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                <div style="font-weight: 600; color: ${flight.source === 'Skyscanner' ? '#2e7d32' : '#1565c0'};">$${flight.price}</div>
                                                 <div style="font-size: 0.85em; margin: 5px 0; color: #333;">
-                                                    ${flight.itineraries[0]?.segments?.map(s => s.carrier + s.flightNumber).join(' → ') || 'Flight'}
+                                                    ${flight.carrier || flight.itineraries?.[0]?.segments?.map(s => s.carrier + (s.flightNumber || '')).join(' → ') || 'Flight'}
                                                 </div>
                                                 <div style="font-size: 0.8em; color: #666;">
-                                                    ${flight.itineraries[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || ''}
+                                                    ${flight.direct ? '✈️ Direct' : flight.itineraries?.[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || 'Connecting'}
                                                 </div>
                                                 <div style="font-size: 0.75em; color: #888; margin-top: 5px;">
-                                                    ${flight.seatsAvailable || '?'} seats • ${flight.bookingClass}
+                                                    ${flight.seatsAvailable ? flight.seatsAvailable + ' seats • ' : ''}${flight.bookingClass || 'Economy'}
                                                 </div>
-                                                <span class="verification-badge verified" style="margin-top: 5px;">REAL DATA</span>
-                                                <div style="font-size: 0.7em; color: #1565c0; margin-top: 5px;">Click to book →</div>
+                                                <span class="verification-badge verified" style="margin-top: 5px; background: ${flight.source === 'Skyscanner' ? '#c8e6c9' : '#d4edda'};">${flight.source || 'AMADEUS'}</span>
+                                                <div style="font-size: 0.7em; color: ${flight.source === 'Skyscanner' ? '#2e7d32' : '#1565c0'}; margin-top: 5px;">Click to book →</div>
                                             </div>
                                         </a>
                                     `).join('')}
                                 </div>
                             ` : `
                                 <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
-                                    No flights found in Amadeus sandbox
-                                    <a href="https://www.google.com/travel/flights?q=flights+from+${result.departure}+to+${result.location.airport}+on+${result.dates.start}" target="_blank" style="color: #1565c0; margin-left: 10px;">Search Google Flights →</a>
+                                    No flights found
+                                    <a href="https://www.skyscanner.com/transport/flights/${result.departure}/${result.location.airport}/${result.dates.start.replace(/-/g, '')}" target="_blank" style="color: #1565c0; margin-left: 10px;">Search Skyscanner →</a>
                                 </p>
                             `}
 
