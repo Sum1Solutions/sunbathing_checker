@@ -275,10 +275,24 @@
                 </div>
                 <div class="form-group">
                     <label>Max Budget/Night</label>
-                    <input type="number" id="maxBudget" placeholder="150" value="150">
+                    <input type="number" id="maxBudget" placeholder="199" value="199" min="50" max="2000">
                 </div>
             </div>
             <div class="form-row">
+                <div class="form-group">
+                    <label>Hotel Filters</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #fff; border: 2px solid #ddd; border-radius: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
+                            <input type="checkbox" id="filterLuxuryBeach"> 🏖️ Luxury Beachfront
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
+                            <input type="checkbox" id="filterMarriott"> 🏨 Marriott Properties
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
+                            <input type="checkbox" id="filterPlatinum"> ⭐ Platinum/Elite Offers
+                        </label>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>Destinations</label>
                     <select id="destinations" multiple style="height: 100px;">
@@ -379,6 +393,13 @@
             const minWeather = document.getElementById('minWeather').value;
             const verificationLevel = document.getElementById('verificationLevel').value;
 
+            // Hotel filters
+            const hotelFilters = {
+                luxuryBeach: document.getElementById('filterLuxuryBeach').checked,
+                marriott: document.getElementById('filterMarriott').checked,
+                platinum: document.getElementById('filterPlatinum').checked
+            };
+
             // Parse the natural language description
             const searchCriteria = description ? parseDescription(description) : null;
 
@@ -415,10 +436,11 @@
                     hotels: hotelResults[i],
                     dates: dates,
                     departure: departure,
-                    maxBudget: maxBudget
+                    maxBudget: maxBudget,
+                    hotelFilters: hotelFilters
                 }));
 
-                displayResults(allResults, minWeather, searchCriteria);
+                displayResults(allResults, minWeather, searchCriteria, hotelFilters);
             } catch (error) {
                 console.error('Error:', error);
                 results.innerHTML = `<p style="color: red;">Error fetching data: ${error.message}</p>`;
@@ -580,39 +602,65 @@
         }
 
         // Generate real search URLs for booking sites
-        function generateSearchLinks(locationName, dates, maxBudget, searchCriteria) {
+        function generateSearchLinks(locationName, dates, maxBudget, searchCriteria, hotelFilters) {
             const locationMap = {
-                'Naples': { airbnb: 'Naples--FL', vrbo: 'Naples,+Florida', lat: 26.1420, lon: -81.7948 },
-                'Fort Lauderdale': { airbnb: 'Fort-Lauderdale--FL', vrbo: 'Fort+Lauderdale,+Florida', lat: 26.1224, lon: -80.1373 },
-                'Miami': { airbnb: 'Miami--FL', vrbo: 'Miami,+Florida', lat: 25.7617, lon: -80.1918 },
-                'Key West': { airbnb: 'Key-West--FL', vrbo: 'Key+West,+Florida', lat: 24.5551, lon: -81.7800 },
-                'West Palm Beach': { airbnb: 'West-Palm-Beach--FL', vrbo: 'West+Palm+Beach,+Florida', lat: 26.7153, lon: -80.0534 }
+                'Naples': { airbnb: 'Naples--FL', vrbo: 'Naples,+Florida', marriott: 'naples-fl', lat: 26.1420, lon: -81.7948 },
+                'Fort Lauderdale': { airbnb: 'Fort-Lauderdale--FL', vrbo: 'Fort+Lauderdale,+Florida', marriott: 'fort-lauderdale-fl', lat: 26.1224, lon: -80.1373 },
+                'Miami': { airbnb: 'Miami--FL', vrbo: 'Miami,+Florida', marriott: 'miami-fl', lat: 25.7617, lon: -80.1918 },
+                'Key West': { airbnb: 'Key-West--FL', vrbo: 'Key+West,+Florida', marriott: 'key-west-fl', lat: 24.5551, lon: -81.7800 },
+                'West Palm Beach': { airbnb: 'West-Palm-Beach--FL', vrbo: 'West+Palm+Beach,+Florida', marriott: 'west-palm-beach-fl', lat: 26.7153, lon: -80.0534 }
             };
 
             const loc = locationMap[locationName] || locationMap['Miami'];
             const checkin = dates?.start || '2025-01-01';
             const checkout = dates?.end || '2025-01-15';
+            const priceNum = parseInt(maxBudget) || 199;
 
-            // Build Airbnb URL with filters
-            let airbnbUrl = `https://www.airbnb.com/s/${loc.airbnb}/homes?checkin=${checkin}&checkout=${checkout}&price_max=${maxBudget}`;
+            // Build Airbnb URL with filters (price_max must be integer)
+            let airbnbUrl = `https://www.airbnb.com/s/${loc.airbnb}/homes?checkin=${checkin}&checkout=${checkout}&price_max=${priceNum}`;
             if (searchCriteria?.pool) airbnbUrl += '&amenities%5B%5D=7'; // Pool amenity
-            if (searchCriteria?.beachProximity) airbnbUrl += '&l2_property_type_ids%5B%5D=1'; // Beachfront
+            if (searchCriteria?.beachProximity || hotelFilters?.luxuryBeach) airbnbUrl += '&amenities%5B%5D=6'; // Beachfront
 
             // VRBO URL
             const vrboUrl = `https://www.vrbo.com/search?destination=${loc.vrbo}&startDate=${checkin}&endDate=${checkout}&adults=2`;
 
-            // Booking.com URL
-            const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida')}&checkin=${checkin}&checkout=${checkout}&nflt=price%3DUSD-0-${maxBudget}-1`;
+            // Booking.com URL - add beachfront filter if selected
+            let bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida')}&checkin=${checkin}&checkout=${checkout}&nflt=price%3DUSD-0-${priceNum}-1`;
+            if (hotelFilters?.luxuryBeach) bookingUrl += '%3Bbeachfront%3D1%3Bclass%3D4%3Bclass%3D5'; // 4-5 star beachfront
 
             // Google Hotels URL
-            const googleUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(locationName + ' Florida')}?q=${encodeURIComponent(locationName + ' vacation rentals')}&dates=${checkin.replace(/-/g, '')}%2C${checkout.replace(/-/g, '')}`;
+            const googleUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(locationName + ' Florida')}?q=${encodeURIComponent(locationName + ' hotels')}&dates=${checkin.replace(/-/g, '')}%2C${checkout.replace(/-/g, '')}`;
 
-            return [
+            // Marriott direct search (shows Bonvoy benefits)
+            const marriottUrl = `https://www.marriott.com/search/default.mi?destinationAddress.destination=${encodeURIComponent(locationName + ', FL')}&fromDate=${formatMarriottDate(checkin)}&toDate=${formatMarriottDate(checkout)}`;
+
+            // Luxury beachfront specific search
+            const luxuryBeachUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ' beach resort')}&checkin=${checkin}&checkout=${checkout}&nflt=class%3D5%3Bbeachfront%3D1`;
+
+            const links = [
                 { name: 'Airbnb', url: airbnbUrl, icon: '🏠', color: '#FF5A5F' },
                 { name: 'VRBO', url: vrboUrl, icon: '🏡', color: '#3B5998' },
                 { name: 'Booking.com', url: bookingUrl, icon: '🏨', color: '#003580' },
                 { name: 'Google Hotels', url: googleUrl, icon: '🔍', color: '#4285F4' }
             ];
+
+            // Add Marriott link if filter selected
+            if (hotelFilters?.marriott || hotelFilters?.platinum) {
+                links.push({ name: 'Marriott Bonvoy', url: marriottUrl, icon: '🌟', color: '#1C1C1C' });
+            }
+
+            // Add luxury beachfront link if filter selected
+            if (hotelFilters?.luxuryBeach) {
+                links.push({ name: 'Luxury Beach', url: luxuryBeachUrl, icon: '🏖️', color: '#00796B' });
+            }
+
+            return links;
+        }
+
+        // Format date for Marriott (MM/DD/YYYY)
+        function formatMarriottDate(dateStr) {
+            const d = new Date(dateStr);
+            return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
         }
 
         // Generate Google Flights URL
@@ -621,13 +669,13 @@
             return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departureDate}%20returning%20${returnDate}`;
         }
 
-        function displayResults(results, minWeather, searchCriteria) {
+        function displayResults(results, minWeather, searchCriteria, hotelFilters) {
             const container = document.getElementById('results');
             let html = '';
 
             // Show parsed search criteria if provided
+            const criteriaItems = [];
             if (searchCriteria) {
-                const criteriaItems = [];
                 if (searchCriteria.propertyType !== 'any') criteriaItems.push(`Type: ${searchCriteria.propertyType}`);
                 if (searchCriteria.floors) criteriaItems.push(`${searchCriteria.floors}-story`);
                 if (searchCriteria.beachProximity) criteriaItems.push('Near beach');
@@ -636,8 +684,13 @@
                 if (searchCriteria.nice) criteriaItems.push('Nice/Quality');
                 if (searchCriteria.minBedrooms) criteriaItems.push(`${searchCriteria.minBedrooms}+ bedrooms`);
                 if (searchCriteria.features.length) criteriaItems.push(...searchCriteria.features);
+            }
+            // Add hotel filter indicators
+            if (hotelFilters?.luxuryBeach) criteriaItems.push('🏖️ Luxury Beachfront');
+            if (hotelFilters?.marriott) criteriaItems.push('🌟 Marriott');
+            if (hotelFilters?.platinum) criteriaItems.push('⭐ Platinum/Elite');
 
-                if (criteriaItems.length > 0) {
+            if (criteriaItems.length > 0) {
                     html += `
                         <div style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <strong>Looking for:</strong>
@@ -646,7 +699,6 @@
                             </span>
                         </div>
                     `;
-                }
             }
 
             results.forEach(result => {
@@ -728,7 +780,7 @@
                             <h3 style="margin-top: 20px;">Search Vacation Rentals</h3>
                             <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Click to search with your criteria pre-filled:</p>
                             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                ${generateSearchLinks(result.location.name, result.dates, result.maxBudget, searchCriteria).map(link => `
+                                ${generateSearchLinks(result.location.name, result.dates, result.maxBudget, searchCriteria, hotelFilters).map(link => `
                                     <a href="${link.url}" target="_blank" style="text-decoration: none;">
                                         <div style="background: ${link.color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
                                             ${link.icon} ${link.name}
