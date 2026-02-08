@@ -3,802 +3,1275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracey's Sun Ball Finder</title>
+    <title>Tracey's Sunball Finder</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #e8e8e8;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
         }
         h1 {
-            text-align: center;
-            color: #ff6b35;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            color: #ff69b4;
+            font-size: 2.8em;
+            text-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
+            margin-bottom: 8px;
         }
         .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
+            color: #ffb6c1;
+            font-size: 1.1em;
+            opacity: 0.9;
         }
-        .search-form {
-            background: #f8f9fa;
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 25px;
-            border-radius: 15px;
             margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .form-row {
+        .panel-title {
+            font-size: 1.2em;
+            color: #ff69b4;
+            margin-bottom: 20px;
             display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
-        .form-group {
-            flex: 1;
-            min-width: 200px;
+        .criteria-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
         }
-        label {
+        .criteria-item label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
+            font-size: 0.85em;
+            color: #88c0d0;
+            margin-bottom: 8px;
         }
-        input, select {
+        .criteria-item input, .criteria-item select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
             font-size: 1em;
         }
-        input:focus, select:focus {
-            border-color: #667eea;
+        .criteria-item input:focus, .criteria-item select:focus {
             outline: none;
+            border-color: #ff69b4;
         }
-        .btn {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2em;
-            font-weight: 600;
-            border-radius: 10px;
+        .range-display {
+            font-size: 0.9em;
+            color: #ff69b4;
+            margin-top: 5px;
+        }
+
+        .airport-toggles {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .toggle-btn {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.15);
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 25px;
             cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            opacity: 0.6;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255,107,53,0.4);
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            border-color: #ff69b4;
+            color: #fff;
+            opacity: 1;
         }
-        .results {
+        .toggle-btn:hover {
+            border-color: #ff69b4;
+            opacity: 0.9;
+        }
+
+        .scan-btn {
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+            color: #fff;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            font-weight: 700;
+            border-radius: 30px;
+            cursor: pointer;
+            display: block;
+            margin: 25px auto 0;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .scan-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.5);
+        }
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
             display: none;
         }
-        .results.active {
+        .status-bar.active {
             display: block;
         }
-        .location-card {
-            border: 2px solid #eee;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .location-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+        .status-text {
+            color: #88c0d0;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 10px;
         }
-        .location-name {
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #ff69b4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results */
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #88c0d0;
+        }
+        .no-results h3 {
             font-size: 1.5em;
-            font-weight: 700;
+            margin-bottom: 10px;
         }
-        .weather-score {
-            font-size: 2em;
+
+        /* Sunball Window Cards */
+        .sunball-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
         }
-        .deals-section {
+        .sunball-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .sunball-card:hover {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-color: rgba(255, 105, 180, 0.4);
+        }
+        .sunball-card.perfect {
+            border: 2px solid #ff69b4;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
+        }
+        .sunball-card.expanded {
+            grid-column: 1 / -1;
+            max-width: 100%;
+        }
+        .sunball-card.expanded .weather-days {
+            justify-content: flex-start;
+        }
+        .sunball-card.expanded .weather-day {
+            min-width: 90px;
+            max-width: 90px;
+            padding: 12px 10px;
+        }
+        .sunball-card.expanded .day-temp {
+            font-size: 1.4em;
+        }
+        .sunball-card.expanded .day-conditions {
+            font-size: 0.7em;
+            white-space: normal;
+        }
+        .expand-hint {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7em;
+            color: rgba(255,255,255,0.4);
+            pointer-events: none;
+        }
+        .sunball-card.expanded .expand-hint {
+            display: none;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
             padding: 20px;
-        }
-        .deal-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid #28a745;
+            align-items: flex-start;
         }
-        .deal-card.warning {
-            border-left-color: #ffc107;
-        }
-        .deal-card.danger {
-            border-left-color: #dc3545;
-        }
-        .deal-info h4 {
+        .destination-info h3 {
+            font-size: 1.6em;
+            color: #fff;
             margin-bottom: 5px;
-            color: #333;
         }
-        .deal-info p {
+        .destination-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .meta-badge {
+            font-size: 0.75em;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+        }
+        .meta-badge.cannabis {
+            background: rgba(76, 175, 80, 0.3);
+            color: #81c784;
+        }
+        .meta-badge.jetblue {
+            background: rgba(0, 114, 198, 0.3);
+            color: #64b5f6;
+        }
+        .sunball-score {
+            text-align: right;
+        }
+        .score-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #ff69b4;
+            line-height: 1;
+        }
+        .score-label {
+            font-size: 0.8em;
+            color: #88c0d0;
+        }
+
+        /* Weather Window */
+        .weather-window {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+        }
+        .window-title {
+            font-size: 0.9em;
+            color: #ff69b4;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .weather-days {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            flex-wrap: nowrap;
+        }
+        .weather-day {
+            min-width: 70px;
+            max-width: 70px;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .weather-day.perfect {
+            background: linear-gradient(135deg, rgba(255,105,180,0.2), rgba(255,20,147,0.2));
+            border: 1px solid rgba(255,105,180,0.4);
+        }
+        .day-name {
+            font-size: 0.75em;
+            color: #88c0d0;
+            margin-bottom: 3px;
+        }
+        .day-temp {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #fff;
+        }
+        .day-feels {
+            font-size: 0.65em;
+            color: #aaa;
+        }
+        .day-sun {
+            margin-top: 3px;
+            font-size: 0.9em;
+        }
+        .day-conditions {
+            font-size: 0.6em;
+            color: #888;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Flights Section */
+        .flights-section {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .section-title {
+            font-size: 0.9em;
+            color: #88c0d0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .flight-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .flight-chip {
+            background: rgba(0, 114, 198, 0.2);
+            border: 1px solid rgba(0, 114, 198, 0.4);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.85em;
+            color: #64b5f6;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .flight-chip:hover {
+            background: rgba(0, 114, 198, 0.4);
+            transform: scale(1.05);
+        }
+        .flight-chip .origin {
+            font-weight: 600;
+        }
+        .no-flights {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        /* Hotels Section */
+        .hotels-section {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .hotel-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .hotel-chip {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 0.85em;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .hotel-chip:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #ff69b4;
+        }
+        .hotel-chip.marriott {
+            border-color: rgba(139, 69, 19, 0.5);
+            background: rgba(139, 69, 19, 0.15);
+        }
+        .hotel-chip.noble {
+            border-color: rgba(218, 165, 32, 0.5);
+            background: rgba(218, 165, 32, 0.15);
+        }
+
+        /* Cannabis note */
+        .cannabis-note {
+            margin-top: 15px;
+            padding: 10px 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #81c784;
+            border-left: 3px solid #4caf50;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
             color: #666;
             font-size: 0.9em;
         }
-        .deal-price {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #28a745;
-        }
-        .verification-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        .verified {
-            background: #d4edda;
-            color: #155724;
-        }
-        .unverified {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .scam-warning {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .verification-checks {
-            margin-top: 10px;
-            font-size: 0.85em;
-        }
-        .check-item {
-            display: inline-block;
-            margin-right: 15px;
-            color: #666;
-        }
-        .check-item.pass { color: #28a745; }
-        .check-item.fail { color: #dc3545; }
-        .check-item.warn { color: #ffc107; }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 50px;
-        }
-        .loading.active {
-            display: block;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .day-forecast {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 10px 0;
-        }
-        .day-card {
-            min-width: 120px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .day-card.best {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            border: 2px solid #28a745;
-        }
-        .day-name {
-            font-weight: 600;
-            color: #333;
-        }
-        .day-temp {
-            font-size: 1.5em;
-            color: #ff6b35;
-            margin: 5px 0;
-        }
-        .day-conditions {
-            font-size: 0.85em;
-            color: #666;
-        }
-        .flamingos {
-            font-size: 1.2em;
-            margin-top: 5px;
+        footer a {
+            color: #88c0d0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Tracey's Sun Ball Finder</h1>
-        <p class="subtitle">For birds heading south for their habenula and health</p>
+        <header>
+            <h1>🦩 Sunball Finder 🦩</h1>
+            <p class="subtitle">Finding perfect weather windows for Vitamin D & wellness recharge</p>
+        </header>
 
-        <form class="search-form" id="searchForm">
-            <!-- Natural Language Search -->
-            <div class="form-row">
-                <div class="form-group" style="flex: 3;">
-                    <label>Describe what you're looking for</label>
-                    <textarea id="description" rows="2" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; font-family: inherit; resize: vertical;" placeholder="e.g., a two floor condo near the beach, clean and nice with a pool"></textarea>
-                    <p style="font-size: 0.8em; color: #888; margin-top: 5px;">
-                        Try: "beachfront", "condo", "house", "pool", "parking", "2 bedroom", "clean", "nice"
-                    </p>
+        <div class="control-panel">
+            <div class="panel-title">⚙️ Sunball Criteria</div>
+
+            <div class="criteria-grid">
+                <div class="criteria-item">
+                    <label>Target Temperature (feels like)</label>
+                    <input type="range" id="targetTemp" min="65" max="85" value="72" oninput="updateTempDisplay()">
+                    <div class="range-display" id="tempDisplay">72°F</div>
+                </div>
+                <div class="criteria-item">
+                    <label>Temperature Range (±)</label>
+                    <input type="range" id="tempRange" min="3" max="15" value="10" oninput="updateTempDisplay()">
+                    <div class="range-display" id="rangeDisplay">±10°F (62-82°F)</div>
+                </div>
+                <div class="criteria-item">
+                    <label>Minimum Sunshine</label>
+                    <select id="minSunshine">
+                        <option value="50">50%+ (Partly Sunny)</option>
+                        <option value="75" selected>75%+ (Mostly Sunny)</option>
+                        <option value="90">90%+ (Clear Skies)</option>
+                    </select>
+                </div>
+                <div class="criteria-item">
+                    <label>Consecutive Days</label>
+                    <select id="minDays">
+                        <option value="2">2+ days</option>
+                        <option value="3" selected>3+ days</option>
+                        <option value="4">4+ days</option>
+                        <option value="5">5+ days</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Departure Airport</label>
-                    <select id="departure">
-                        <option value="PVD" selected>Providence (PVD)</option>
-                        <option value="BOS">Boston (BOS)</option>
-                        <option value="JFK">New York JFK</option>
-                        <option value="LGA">New York LGA</option>
-                        <option value="EWR">Newark (EWR)</option>
-                        <option value="PHL">Philadelphia (PHL)</option>
-                        <option value="DCA">Washington DC (DCA)</option>
-                        <option value="ORD">Chicago (ORD)</option>
-                        <option value="LAX">Los Angeles (LAX)</option>
-                        <option value="SFO">San Francisco (SFO)</option>
-                        <option value="ATL">Atlanta (ATL)</option>
-                    </select>
+            <div class="criteria-item" style="margin-bottom: 20px;">
+                <label>Show Flights From (click to toggle)</label>
+                <div class="airport-toggles">
+                    <button type="button" class="toggle-btn active" data-airport="PVD">✈️ PVD Providence</button>
+                    <button type="button" class="toggle-btn active" data-airport="BOS">✈️ BOS Boston</button>
                 </div>
-                <div class="form-group">
-                    <label>Date Range</label>
-                    <select id="dateRange">
-                        <option value="jan1-15">Jan 1-15, 2025</option>
-                        <option value="jan15-31">Jan 15-31, 2025</option>
-                        <option value="feb1-15">Feb 1-15, 2025</option>
-                        <option value="custom">Custom dates...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Max Budget/Night</label>
-                    <input type="number" id="maxBudget" placeholder="199" value="199" min="50" max="2000">
-                </div>
+                <p style="font-size: 0.75em; color: #888; margin-top: 8px;">JetBlue • Southwest • Breeze • Spirit • Frontier — Toggle off an airport to hide those flights</p>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Hotel Filters</label>
-                    <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #fff; border: 2px solid #ddd; border-radius: 8px;">
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
-                            <input type="checkbox" id="filterLuxuryBeach"> 🏖️ Luxury Beachfront
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
-                            <input type="checkbox" id="filterMarriott"> 🏨 Marriott Properties
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-weight: normal; cursor: pointer;">
-                            <input type="checkbox" id="filterPlatinum"> ⭐ Platinum/Elite Offers
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Destinations</label>
-                    <select id="destinations" multiple style="height: 100px;">
-                        <option value="naples" selected>Naples</option>
-                        <option value="fort-lauderdale" selected>Fort Lauderdale</option>
-                        <option value="miami">Miami</option>
-                        <option value="key-west">Key West</option>
-                        <option value="west-palm-beach">West Palm Beach</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Min Weather Score</label>
-                    <select id="minWeather">
-                        <option value="3">3+ Flamingos</option>
-                        <option value="4" selected>4+ Flamingos</option>
-                        <option value="5">5 Flamingos Only</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Verification Level</label>
-                    <select id="verificationLevel">
-                        <option value="strict" selected>Strict (Verified only)</option>
-                        <option value="moderate">Moderate (Show warnings)</option>
-                        <option value="all">All (Including unverified)</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn">Find Sunballs</button>
-        </form>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Searching for verified deals and checking weather...</p>
-            <p style="color: #666; font-size: 0.9em;">Running scam checks and cross-verification...</p>
+            <div class="criteria-grid">
+                <div class="criteria-item">
+                    <label>Cannabis Preference</label>
+                    <select id="cannabisFilter">
+                        <option value="any" selected>All (Have Med Card)</option>
+                        <option value="prefer">Prefer Rec States</option>
+                        <option value="require">Require Rec Only</option>
+                    </select>
+                </div>
+                <div class="criteria-item">
+                    <label>Hotel Preference</label>
+                    <select id="hotelFilter">
+                        <option value="all" selected>All Hotels</option>
+                        <option value="marriott">Marriott Bonvoy Only</option>
+                        <option value="beach">Beach Properties Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="scan-btn" id="scanBtn" onclick="scanForSunballs()">
+                🔍 Find Sunball Windows
+            </button>
         </div>
 
-        <div class="results" id="results">
-            <!-- Results will be inserted here -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-text">
+                <div class="spinner"></div>
+                <span id="statusText">Scanning destinations...</span>
+            </div>
         </div>
+
+        <div id="results"></div>
+
+        <footer>
+            <p>For birds heading south for their habenula and health 🦩</p>
+            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank">NWS</a> | Flights: JetBlue nonstops from New England</p>
+        </footer>
     </div>
 
     <script>
-        const LOCATIONS = {
-            'naples': { name: 'Naples', lat: 26.1420, lon: -81.7948, airport: 'RSW' },
-            'fort-lauderdale': { name: 'Fort Lauderdale', lat: 26.1224, lon: -80.1373, airport: 'FLL' },
-            'miami': { name: 'Miami', lat: 25.7617, lon: -80.1918, airport: 'MIA' },
-            'key-west': { name: 'Key West', lat: 24.5551, lon: -81.7800, airport: 'EYW' },
-            'west-palm-beach': { name: 'West Palm Beach', lat: 26.7153, lon: -80.0534, airport: 'PBI' }
+        // Destination database with nonstop routes from PVD/BOS
+        // Airlines: JetBlue (B6), Southwest (WN), Breeze (MX), Spirit (NK)
+        const DESTINATIONS = {
+            // California - Rec Cannabis ✓
+            'LAX': {
+                name: 'Los Angeles',
+                state: 'CA',
+                lat: 34.0522, lon: -118.2437,
+                cannabis: 'recreational',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Santa Monica Le Merigot', 'Ritz-Carlton Marina del Rey'],
+                    noble: ['Hotel Shangri-La Santa Monica'],
+                    beach: ['Shutters on the Beach', 'Casa del Mar']
+                },
+                restaurants: ['Bestia', 'Gjelina', 'Providence', 'Nobu Malibu']
+            },
+            'SAN': {
+                name: 'San Diego',
+                state: 'CA',
+                lat: 32.7157, lon: -117.1611,
+                cannabis: 'recreational',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['Marriott Marquis San Diego', 'Westin San Diego Gaslamp'],
+                    noble: [],
+                    beach: ['Hotel del Coronado', 'La Valencia Hotel']
+                },
+                restaurants: ['Juniper & Ivy', 'Addison', 'Born & Raised', 'Coasterra']
+            },
+            // Nevada - Rec Cannabis ✓
+            'LAS': {
+                name: 'Las Vegas',
+                state: 'NV',
+                lat: 36.1699, lon: -115.1398,
+                cannabis: 'recreational',
+                airlines: {
+                    PVD: ['Breeze', 'Spirit'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['The Cosmopolitan', 'Vdara', 'Delano Las Vegas'],
+                    noble: [],
+                    beach: []
+                },
+                restaurants: ['é by José Andrés', 'Carbone', 'Mayfair Supper Club', 'Bazaar Meat']
+            },
+            // Arizona - Rec Cannabis ✓
+            'PHX': {
+                name: 'Phoenix/Scottsdale',
+                state: 'AZ',
+                lat: 33.4484, lon: -112.0740,
+                cannabis: 'recreational',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Scottsdale Camelback', 'The Phoenician'],
+                    noble: ['Sanctuary on Camelback'],
+                    beach: []
+                },
+                restaurants: ['Binkley\'s Restaurant', 'Talavera', 'FnB', 'The Mission']
+            },
+            // Puerto Rico - Medical only, but exception allowed
+            'SJU': {
+                name: 'San Juan',
+                state: 'PR',
+                lat: 18.4655, lon: -66.1057,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['JetBlue'],
+                    BOS: ['JetBlue', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['Condado Vanderbilt', 'La Concha Renaissance', 'The St. Regis Bahia Beach'],
+                    noble: [],
+                    beach: ['Dorado Beach Ritz-Carlton', 'St. Regis Bahia Beach']
+                },
+                restaurants: ['Marmalade', '1919 at Condado Vanderbilt', 'Cocina Abierta', 'Santaella']
+            },
+            // Florida - Medical only
+            'FLL': {
+                name: 'Fort Lauderdale',
+                state: 'FL',
+                lat: 26.1224, lon: -80.1373,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['JetBlue', 'Breeze', 'Spirit'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['W Fort Lauderdale', 'The Ritz-Carlton Fort Lauderdale'],
+                    noble: ['Pelican Grand Beach Resort'],
+                    beach: ['Atlantic Hotel & Spa', 'The Diplomat Beach Resort']
+                },
+                restaurants: ['Louie Bossi\'s', 'Steak 954', 'Timpano', 'Casa D\'Angelo']
+            },
+            'MIA': {
+                name: 'Miami',
+                state: 'FL',
+                lat: 25.7617, lon: -80.1918,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['Spirit'],
+                    BOS: ['JetBlue', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['Faena Miami Beach', 'The Ritz-Carlton South Beach', 'W South Beach'],
+                    noble: [],
+                    beach: ['Fontainebleau', 'The Setai', '1 Hotel South Beach']
+                },
+                restaurants: ['Carbone Miami', 'Cecconi\'s', 'KYU', 'Mandolin Aegean Bistro']
+            },
+            'PBI': {
+                name: 'West Palm Beach',
+                state: 'FL',
+                lat: 26.7153, lon: -80.0534,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['JetBlue', 'Breeze'],
+                    BOS: ['JetBlue']
+                },
+                hotels: {
+                    marriott: ['The Breakers Palm Beach', 'Eau Palm Beach'],
+                    noble: [],
+                    beach: ['Four Seasons Palm Beach', 'The Colony Hotel']
+                },
+                restaurants: ['Buccan', 'Café Boulud', 'Imoto', 'Echo']
+            },
+            'TPA': {
+                name: 'Tampa/Clearwater',
+                state: 'FL',
+                lat: 27.9506, lon: -82.4572,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['JetBlue', 'Breeze', 'Southwest', 'Spirit', 'Frontier'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit', 'Frontier']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Tampa', 'Sandpearl Resort Clearwater'],
+                    noble: [],
+                    beach: ['Don CeSar', 'Opal Sands Resort']
+                },
+                restaurants: ['Bern\'s Steak House', 'Edison', 'Oystercatchers', 'Columbia Restaurant']
+            },
+            'RSW': {
+                name: 'Fort Myers/Naples',
+                state: 'FL',
+                lat: 26.1420, lon: -81.7948,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['Breeze', 'Southwest'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Marco Island', 'The Ritz-Carlton Naples'],
+                    noble: [],
+                    beach: ['LaPlaya Beach & Golf Resort', 'Naples Grande Beach Resort']
+                },
+                restaurants: ['The Bay House', 'USS Nemo', 'Barbatella', 'Sea Salt']
+            },
+            'MCO': {
+                name: 'Orlando',
+                state: 'FL',
+                lat: 28.5383, lon: -81.3792,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['JetBlue', 'Breeze', 'Southwest', 'Spirit', 'Frontier'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit', 'Frontier']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Orlando Grande Lakes', 'The Ritz-Carlton Orlando'],
+                    noble: [],
+                    beach: []
+                },
+                restaurants: ['The Ravenous Pig', 'Victoria & Albert\'s', 'Capa', 'Kadence']
+            },
+            'JAX': {
+                name: 'Jacksonville',
+                state: 'FL',
+                lat: 30.3322, lon: -81.6557,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue']
+                },
+                hotels: {
+                    marriott: ['Ponte Vedra Inn & Club'],
+                    noble: [],
+                    beach: ['One Ocean Resort', 'Casa Marina Hotel']
+                },
+                restaurants: ['Restaurant Orsay', 'bb\'s', 'Black Sheep', 'Town Hall']
+            },
+            'SAV': {
+                name: 'Savannah',
+                state: 'GA',
+                lat: 32.0809, lon: -81.0912,
+                cannabis: 'none',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue']
+                },
+                hotels: {
+                    marriott: ['The Westin Savannah Harbor', 'JW Marriott Savannah'],
+                    noble: [],
+                    beach: ['The Cloister at Sea Island']
+                },
+                restaurants: ['The Grey', 'Elizabeth on 37th', 'The Olde Pink House', 'Husk Savannah']
+            },
+            'CHS': {
+                name: 'Charleston',
+                state: 'SC',
+                lat: 32.7765, lon: -79.9311,
+                cannabis: 'none',
+                airlines: {
+                    PVD: ['Breeze', 'JetBlue'],
+                    BOS: ['JetBlue', 'Southwest']
+                },
+                hotels: {
+                    marriott: ['Belmond Charleston Place', 'The Spectator Hotel'],
+                    noble: [],
+                    beach: ['Wild Dunes Resort', 'The Sanctuary at Kiawah']
+                },
+                restaurants: ['FIG', 'Husk', 'Slightly North of Broad', 'The Ordinary']
+            },
+            'MYR': {
+                name: 'Myrtle Beach',
+                state: 'SC',
+                lat: 33.6891, lon: -78.8867,
+                cannabis: 'none',
+                airlines: {
+                    PVD: ['Spirit'],
+                    BOS: ['Spirit']
+                },
+                hotels: {
+                    marriott: ['Marriott Myrtle Beach Resort'],
+                    noble: [],
+                    beach: ['Marina Inn at Grande Dunes']
+                },
+                restaurants: ['The Library', 'Rioz Brazilian Steakhouse', 'Sea Captain\'s House']
+            },
+            'MSY': {
+                name: 'New Orleans',
+                state: 'LA',
+                lat: 29.9511, lon: -90.0715,
+                cannabis: 'medical',
+                airlines: {
+                    PVD: ['Breeze', 'Spirit'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['The Roosevelt New Orleans', 'W New Orleans French Quarter'],
+                    noble: [],
+                    beach: []
+                },
+                restaurants: ['Commander\'s Palace', 'Compère Lapin', 'Cochon', 'Herbsaint']
+            },
+            'AUS': {
+                name: 'Austin',
+                state: 'TX',
+                lat: 30.2672, lon: -97.7431,
+                cannabis: 'none',
+                airlines: {
+                    PVD: ['Breeze'],
+                    BOS: ['JetBlue', 'Southwest', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['JW Marriott Austin', 'W Austin'],
+                    noble: [],
+                    beach: []
+                },
+                restaurants: ['Uchi', 'Kemuri Tatsu-ya', 'Emmer & Rye']
+            },
+            // US Virgin Islands - Decriminalized
+            'STT': {
+                name: 'St. Thomas',
+                state: 'USVI',
+                lat: 18.3358, lon: -64.9731,
+                cannabis: 'decriminalized',
+                airlines: {
+                    PVD: [],
+                    BOS: ['JetBlue', 'Spirit']
+                },
+                hotels: {
+                    marriott: ['The Ritz-Carlton St. Thomas', 'Marriott Frenchman\'s Reef'],
+                    noble: [],
+                    beach: ['Secret Harbour Beach Resort', 'Bolongo Bay Beach Resort']
+                },
+                restaurants: ['Gladys\' Cafe', 'Oceana Restaurant', 'Room with a View']
+            },
+            'STX': {
+                name: 'St. Croix',
+                state: 'USVI',
+                lat: 17.7289, lon: -64.8350,
+                cannabis: 'decriminalized',
+                airlines: {
+                    PVD: [],
+                    BOS: ['JetBlue']
+                },
+                hotels: {
+                    marriott: ['The Buccaneer'],
+                    noble: [],
+                    beach: ['Sand Castle on the Beach', 'Tamarind Reef Resort']
+                },
+                restaurants: ['Savant', 'The Galleon', 'Zion Modern Kitchen']
+            }
         };
 
-        // API base URL (use relative for Pages Functions, or full URL for deployed Worker)
-        const API_BASE = window.location.hostname === 'localhost' ? '' : '';
+        // Airline colors and booking URLs
+        const AIRLINES = {
+            'JetBlue': { color: '#0033a0', url: (from, to) => `https://www.jetblue.com/booking/flights?from=${from}&to=${to}&depart=${getNextWeekDate()}&isMultiCity=false&noOfRoute=1&lang=en&adults=1&children=0&infants=0` },
+            'Southwest': { color: '#304cb2', url: (from, to) => `https://www.southwest.com/air/booking/select.html?originationAirportCode=${from}&destinationAirportCode=${to}&departureDate=${getNextWeekDate()}&returnDate=&adultPassengersCount=1` },
+            'Breeze': { color: '#00c7b1', url: (from, to) => `https://www.flybreeze.com/booking/search?from=${from}&to=${to}&departDate=${getNextWeekDate()}&passengers=1` },
+            'Spirit': { color: '#ffcd00', url: (from, to) => `https://www.spirit.com/book/flights?adt=1&from=${from}&to=${to}&date=${getNextWeekDate()}` },
+            'Frontier': { color: '#00a651', url: (from, to) => `https://www.flyfrontier.com/booking/search?from=${from}&to=${to}&date=${getNextWeekDate()}` }
+        };
 
-        // Parse natural language description (mirrors Worker logic)
-        function parseDescription(description) {
-            const desc = description.toLowerCase();
-            return {
-                propertyType: desc.includes('condo') ? 'condo' :
-                              desc.includes('house') ? 'house' :
-                              desc.includes('apartment') ? 'apartment' :
-                              desc.includes('studio') ? 'studio' : 'any',
-                floors: (desc.includes('two floor') || desc.includes('2 floor') || desc.includes('two-story') || desc.includes('2-story')) ? 2 :
-                        (desc.includes('three floor') || desc.includes('3 floor')) ? 3 : null,
-                beachProximity: desc.includes('beach') || desc.includes('ocean') || desc.includes('waterfront'),
-                pool: desc.includes('pool'),
-                clean: desc.includes('clean'),
-                nice: desc.includes('nice') || desc.includes('quality') || desc.includes('good'),
-                minBedrooms: (() => {
-                    const match = desc.match(/(\d+)\s*(bed|br|bedroom)/);
-                    return match ? parseInt(match[1]) : null;
-                })(),
-                features: [
-                    desc.includes('parking') && 'parking',
-                    (desc.includes('wifi') || desc.includes('internet')) && 'wifi',
-                    desc.includes('kitchen') && 'kitchen',
-                    (desc.includes('washer') || desc.includes('laundry')) && 'laundry',
-                    (desc.includes('ac') || desc.includes('air conditioning')) && 'ac',
-                    desc.includes('balcony') && 'balcony',
-                    desc.includes('view') && 'view'
-                ].filter(Boolean)
-            };
+        // Get routes with airlines from selected airports
+        function getRoutesFromAirports(dest, selectedAirports) {
+            const routes = [];
+            for (const apt of selectedAirports) {
+                if (dest.airlines[apt] && dest.airlines[apt].length > 0) {
+                    routes.push({
+                        origin: apt,
+                        airlines: dest.airlines[apt]
+                    });
+                }
+            }
+            return routes;
         }
 
-        document.getElementById('searchForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // UI State
+        let selectedAirports = new Set(['PVD', 'BOS']);
 
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
-
-            loading.classList.add('active');
-            results.classList.remove('active');
-
-            const description = document.getElementById('description').value;
-            const departure = document.getElementById('departure').value;
-            const dateRange = document.getElementById('dateRange').value;
-            const maxBudget = document.getElementById('maxBudget').value;
-            const destinations = Array.from(document.getElementById('destinations').selectedOptions).map(o => o.value);
-            const minWeather = document.getElementById('minWeather').value;
-            const verificationLevel = document.getElementById('verificationLevel').value;
-
-            // Hotel filters
-            const hotelFilters = {
-                luxuryBeach: document.getElementById('filterLuxuryBeach').checked,
-                marriott: document.getElementById('filterMarriott').checked,
-                platinum: document.getElementById('filterPlatinum').checked
-            };
-
-            // Parse the natural language description
-            const searchCriteria = description ? parseDescription(description) : null;
-
-            // Parse date range to actual dates
-            const dateRanges = {
-                'jan1-15': { start: '2025-01-01', end: '2025-01-15' },
-                'jan15-31': { start: '2025-01-15', end: '2025-01-31' },
-                'feb1-15': { start: '2025-02-01', end: '2025-02-15' }
-            };
-            const dates = dateRanges[dateRange] || dateRanges['jan1-15'];
-
-            try {
-                // Fetch weather, flights, AND hotels in parallel
-                const weatherPromises = destinations.map(dest => fetchWeather(LOCATIONS[dest]));
-                const flightPromises = destinations.map(dest =>
-                    searchFlights(departure, LOCATIONS[dest].airport, dates.start, dates.end)
-                );
-                const hotelPromises = destinations.map(dest =>
-                    searchHotels(LOCATIONS[dest].airport, dates.start, dates.end, maxBudget)
-                );
-
-                const [weatherResults, flightResults, hotelResults] = await Promise.all([
-                    Promise.all(weatherPromises),
-                    Promise.all(flightPromises),
-                    Promise.all(hotelPromises)
-                ]);
-
-                // Combine results
-                const allResults = destinations.map((dest, i) => ({
-                    location: LOCATIONS[dest],
-                    locationKey: dest,
-                    weather: weatherResults[i],
-                    flights: flightResults[i],
-                    hotels: hotelResults[i],
-                    dates: dates,
-                    departure: departure,
-                    maxBudget: maxBudget,
-                    hotelFilters: hotelFilters
-                }));
-
-                displayResults(allResults, minWeather, searchCriteria, hotelFilters);
-            } catch (error) {
-                console.error('Error:', error);
-                results.innerHTML = `<p style="color: red;">Error fetching data: ${error.message}</p>`;
-            }
-
-            loading.classList.remove('active');
-            results.classList.add('active');
+        // Toggle airport selection
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const airport = btn.dataset.airport;
+                if (selectedAirports.has(airport)) {
+                    if (selectedAirports.size > 1) { // Keep at least one
+                        selectedAirports.delete(airport);
+                        btn.classList.remove('active');
+                    }
+                } else {
+                    selectedAirports.add(airport);
+                    btn.classList.add('active');
+                }
+            });
         });
 
-        // Flight search - tries Skyscanner first (better coverage), falls back to Amadeus
-        async function searchFlights(origin, destination, departureDate, returnDate) {
-            // Try Skyscanner first (free RapidAPI, better route coverage)
-            try {
-                const ssResponse = await fetch(`${API_BASE}/api/skyscanner`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        origin,
-                        destination,
-                        departureDate,
-                        returnDate,
-                        adults: 1
-                    })
-                });
-
-                const ssData = await ssResponse.json();
-
-                if (ssData.success && ssData.flights?.length > 0) {
-                    console.log('Using Skyscanner data');
-                    return ssData.flights.map(f => ({
-                        ...f,
-                        source: 'Skyscanner',
-                        itineraries: [{
-                            duration: f.direct ? 'Direct' : 'Connecting',
-                            segments: [{
-                                departure: f.departure,
-                                arrival: f.arrival,
-                                carrier: f.carrier,
-                                flightNumber: ''
-                            }]
-                        }]
-                    }));
-                }
-            } catch (e) {
-                console.log('Skyscanner unavailable, trying Amadeus');
-            }
-
-            // Fall back to Amadeus
-            try {
-                const response = await fetch(`${API_BASE}/api/flights`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        origin,
-                        destination,
-                        departureDate,
-                        returnDate,
-                        adults: 1
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.flights) {
-                    return data.flights;
-                } else {
-                    console.log('Flight search note:', data.error || data.note);
-                    return [];
-                }
-            } catch (error) {
-                console.error('Flight search error:', error);
-                return [];
-            }
+        function updateTempDisplay() {
+            const target = document.getElementById('targetTemp').value;
+            const range = document.getElementById('tempRange').value;
+            document.getElementById('tempDisplay').textContent = `${target}°F`;
+            document.getElementById('rangeDisplay').textContent =
+                `±${range}°F (${target - range}-${parseInt(target) + parseInt(range)}°F)`;
         }
 
-        // Hotel search using Amadeus API via our Worker
-        async function searchHotels(cityCode, checkInDate, checkOutDate, maxPrice) {
-            try {
-                const response = await fetch(`${API_BASE}/api/hotels`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cityCode,
-                        checkInDate,
-                        checkOutDate,
-                        adults: 1,
-                        maxPrice: parseInt(maxPrice) * 14 // Convert nightly to total (2 weeks)
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.hotels) {
-                    return data.hotels;
-                } else {
-                    console.log('Hotel search note:', data.error || data.note);
-                    return [];
-                }
-            } catch (error) {
-                console.error('Hotel search error:', error);
-                return [];
+        // Calculate "feels like" temperature (wind chill / heat index approximation)
+        function calculateFeelsLike(temp, windSpeed, humidity = 50) {
+            const wind = parseInt(windSpeed) || 5;
+            if (temp <= 50 && wind > 3) {
+                // Wind chill formula
+                return Math.round(35.74 + 0.6215 * temp - 35.75 * Math.pow(wind, 0.16) + 0.4275 * temp * Math.pow(wind, 0.16));
+            } else if (temp >= 80) {
+                // Simplified heat index
+                return Math.round(temp + (humidity - 50) * 0.1);
             }
+            return temp;
         }
 
-        async function fetchWeather(location) {
+        // Estimate sunshine percentage from forecast description
+        function estimateSunshine(forecast) {
+            const f = forecast.toLowerCase();
+            if (f.includes('sunny') && !f.includes('partly')) return 95;
+            if (f.includes('clear')) return 95;
+            if (f.includes('mostly sunny') || f.includes('mostly clear')) return 85;
+            if (f.includes('partly sunny') || f.includes('partly cloudy')) return 60;
+            if (f.includes('mostly cloudy')) return 30;
+            if (f.includes('cloudy') || f.includes('overcast')) return 15;
+            if (f.includes('rain') || f.includes('storm') || f.includes('shower')) return 10;
+            return 50; // Default
+        }
+
+        // Get sun emoji based on percentage
+        function getSunEmoji(pct) {
+            if (pct >= 85) return '☀️';
+            if (pct >= 60) return '🌤️';
+            if (pct >= 30) return '⛅';
+            return '☁️';
+        }
+
+        // Fetch weather for a destination
+        async function fetchWeather(dest) {
             try {
-                const pointsResp = await fetch(`https://api.weather.gov/points/${location.lat},${location.lon}`, {
-                    headers: { 'User-Agent': 'SunballFinder/1.0' }
+                const pointsResp = await fetch(`https://api.weather.gov/points/${dest.lat},${dest.lon}`, {
+                    headers: { 'User-Agent': 'SunballFinder/2.0 (tracey@example.com)' }
                 });
+                if (!pointsResp.ok) throw new Error('Points API failed');
+
                 const pointsData = await pointsResp.json();
                 const forecastUrl = pointsData.properties.forecast;
 
                 const forecastResp = await fetch(forecastUrl, {
-                    headers: { 'User-Agent': 'SunballFinder/1.0' }
+                    headers: { 'User-Agent': 'SunballFinder/2.0 (tracey@example.com)' }
                 });
-                const forecastData = await forecastResp.json();
+                if (!forecastResp.ok) throw new Error('Forecast API failed');
 
+                const forecastData = await forecastResp.json();
                 return processWeather(forecastData.properties.periods);
             } catch (error) {
-                console.error('Weather fetch error:', error);
+                console.error(`Weather fetch failed for ${dest.name}:`, error);
                 return null;
             }
         }
 
         function processWeather(periods) {
             const days = [];
-            for (let i = 0; i < periods.length; i += 2) {
-                const dayPeriod = periods[i];
-                const nightPeriod = periods[i + 1];
-                if (!dayPeriod || !nightPeriod) continue;
+            for (let i = 0; i < periods.length; i++) {
+                const period = periods[i];
+                if (!period.isDaytime) continue; // Only use daytime periods
 
-                const score = calculateFlamingoScore(dayPeriod, nightPeriod);
+                const nightPeriod = periods[i + 1];
+                const windSpeed = parseInt(period.windSpeed) || 5;
+                const temp = period.temperature;
+                const feelsLike = calculateFeelsLike(temp, windSpeed);
+                const sunshine = estimateSunshine(period.shortForecast);
+
                 days.push({
-                    name: dayPeriod.name,
-                    temp: dayPeriod.temperature,
-                    nightTemp: nightPeriod.temperature,
-                    conditions: dayPeriod.shortForecast,
-                    wind: dayPeriod.windSpeed,
-                    score: score
+                    name: period.name,
+                    date: period.startTime?.split('T')[0],
+                    temp: temp,
+                    feelsLike: feelsLike,
+                    nightTemp: nightPeriod?.temperature,
+                    conditions: period.shortForecast,
+                    wind: period.windSpeed,
+                    sunshine: sunshine
                 });
             }
             return days;
         }
 
-        function calculateFlamingoScore(day, night) {
-            let score = 5;
-            const dayTemp = day.temperature;
-            const nightTemp = night.temperature;
-            const wind = parseInt(day.windSpeed);
-            const conditions = day.shortForecast.toLowerCase();
+        // Find sunball windows (consecutive good days)
+        function findSunballWindows(weather, criteria) {
+            if (!weather || weather.length === 0) return [];
 
-            if (dayTemp < 75) score -= 2;
-            if (nightTemp < 65) score -= 1;
-            if (wind > 15) score -= 1;
-            if (conditions.includes('rain') || conditions.includes('storm')) score -= 1;
-            else if (conditions.includes('cloudy')) score -= 0.5;
+            const { targetTemp, tempRange, minSunshine, minDays } = criteria;
+            const minTemp = targetTemp - tempRange;
+            const maxTemp = targetTemp + tempRange;
 
-            return Math.max(0, Math.min(5, Math.round(score)));
+            const windows = [];
+            let currentWindow = [];
+
+            for (const day of weather) {
+                const meetsTemp = day.feelsLike >= minTemp && day.feelsLike <= maxTemp;
+                const meetsSun = day.sunshine >= minSunshine;
+
+                if (meetsTemp && meetsSun) {
+                    currentWindow.push(day);
+                } else {
+                    if (currentWindow.length >= minDays) {
+                        windows.push([...currentWindow]);
+                    }
+                    currentWindow = [];
+                }
+            }
+
+            // Don't forget the last window
+            if (currentWindow.length >= minDays) {
+                windows.push(currentWindow);
+            }
+
+            return windows;
         }
 
-        // Generate real search URLs for booking sites
-        function generateSearchLinks(locationName, dates, maxBudget, searchCriteria, hotelFilters) {
-            const locationMap = {
-                'Naples': { airbnb: 'Naples--FL', vrbo: 'Naples,+Florida', marriott: 'naples-fl', lat: 26.1420, lon: -81.7948 },
-                'Fort Lauderdale': { airbnb: 'Fort-Lauderdale--FL', vrbo: 'Fort+Lauderdale,+Florida', marriott: 'fort-lauderdale-fl', lat: 26.1224, lon: -80.1373 },
-                'Miami': { airbnb: 'Miami--FL', vrbo: 'Miami,+Florida', marriott: 'miami-fl', lat: 25.7617, lon: -80.1918 },
-                'Key West': { airbnb: 'Key-West--FL', vrbo: 'Key+West,+Florida', marriott: 'key-west-fl', lat: 24.5551, lon: -81.7800 },
-                'West Palm Beach': { airbnb: 'West-Palm-Beach--FL', vrbo: 'West+Palm+Beach,+Florida', marriott: 'west-palm-beach-fl', lat: 26.7153, lon: -80.0534 }
+        // Calculate sunball score for a window
+        function calculateSunballScore(window, criteria) {
+            if (!window || window.length === 0) return 0;
+
+            const { targetTemp } = criteria;
+            let score = 0;
+
+            // Base score from number of days (more is better)
+            score += Math.min(window.length * 15, 45); // Max 45 points for 3+ days
+
+            // Average sunshine score
+            const avgSunshine = window.reduce((sum, d) => sum + d.sunshine, 0) / window.length;
+            score += avgSunshine * 0.35; // Max 35 points
+
+            // Temperature closeness to target
+            const avgFeelsLike = window.reduce((sum, d) => sum + d.feelsLike, 0) / window.length;
+            const tempDiff = Math.abs(avgFeelsLike - targetTemp);
+            score += Math.max(0, 20 - tempDiff); // Max 20 points
+
+            return Math.round(Math.min(100, score));
+        }
+
+        // Main scan function
+        async function scanForSunballs() {
+            const btn = document.getElementById('scanBtn');
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            const resultsDiv = document.getElementById('results');
+
+            btn.disabled = true;
+            statusBar.classList.add('active');
+            resultsDiv.innerHTML = '';
+
+            // Get criteria
+            const criteria = {
+                targetTemp: parseInt(document.getElementById('targetTemp').value),
+                tempRange: parseInt(document.getElementById('tempRange').value),
+                minSunshine: parseInt(document.getElementById('minSunshine').value),
+                minDays: parseInt(document.getElementById('minDays').value)
             };
+            const cannabisFilter = document.getElementById('cannabisFilter').value;
+            const hotelFilter = document.getElementById('hotelFilter').value;
 
-            const loc = locationMap[locationName] || locationMap['Miami'];
-            const checkin = dates?.start || '2025-01-01';
-            const checkout = dates?.end || '2025-01-15';
-            const priceNum = parseInt(maxBudget) || 199;
+            // Filter destinations by selected airports and cannabis preference
+            const eligibleDests = Object.entries(DESTINATIONS).filter(([code, dest]) => {
+                // Check if any airline flies there from selected airports
+                const hasRoute = [...selectedAirports].some(apt => dest.airlines[apt] && dest.airlines[apt].length > 0);
+                if (!hasRoute) return false;
 
-            // Build Airbnb URL with filters (price_max must be integer)
-            let airbnbUrl = `https://www.airbnb.com/s/${loc.airbnb}/homes?checkin=${checkin}&checkout=${checkout}&price_max=${priceNum}`;
-            if (searchCriteria?.pool) airbnbUrl += '&amenities%5B%5D=7'; // Pool amenity
-            if (searchCriteria?.beachProximity || hotelFilters?.luxuryBeach) airbnbUrl += '&amenities%5B%5D=6'; // Beachfront
+                // Cannabis filter
+                if (cannabisFilter === 'require' && dest.cannabis !== 'recreational') return false;
 
-            // VRBO URL
-            const vrboUrl = `https://www.vrbo.com/search?destination=${loc.vrbo}&startDate=${checkin}&endDate=${checkout}&adults=2`;
-
-            // Booking.com URL - use full location format for better matching
-            let bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida, United States')}&checkin=${checkin}&checkout=${checkout}`;
-            if (hotelFilters?.luxuryBeach) bookingUrl += '&nflt=class%3D4%3Bclass%3D5'; // 4-5 star
-
-            // Google Hotels URL
-            const googleUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(locationName + ' Florida')}?q=${encodeURIComponent(locationName + ' hotels')}&dates=${checkin.replace(/-/g, '')}%2C${checkout.replace(/-/g, '')}`;
-
-            // Marriott direct search (shows Bonvoy benefits) - use findhotels endpoint
-            const marriottUrl = `https://www.marriott.com/search/findHotels.mi?searchType=InCity&destinationAddress.city=${encodeURIComponent(locationName)}&destinationAddress.stateProvince=FL&destinationAddress.country=US&fromDate=${formatMarriottDate(checkin)}&toDate=${formatMarriottDate(checkout)}&flexibleDateSearch=false`;
-
-            // Luxury beachfront specific search - use Booking.com with proper params
-            const luxuryBeachUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(locationName + ', Florida, United States')}&checkin=${checkin}&checkout=${checkout}&class=5&nflt=class%3D5`;
-
-            // Hotels.com as additional option (good for rewards)
-            const hotelsComUrl = `https://www.hotels.com/Hotel-Search?destination=${encodeURIComponent(locationName + ', FL')}&startDate=${checkin}&endDate=${checkout}&adults=2`;
-
-            const links = [
-                { name: 'Airbnb', url: airbnbUrl, icon: '🏠', color: '#FF5A5F' },
-                { name: 'VRBO', url: vrboUrl, icon: '🏡', color: '#3B5998' },
-                { name: 'Booking.com', url: bookingUrl, icon: '🏨', color: '#003580' },
-                { name: 'Hotels.com', url: hotelsComUrl, icon: '🛎️', color: '#D32F2F' },
-                { name: 'Google Hotels', url: googleUrl, icon: '🔍', color: '#4285F4' }
-            ];
-
-            // Add Marriott link if filter selected
-            if (hotelFilters?.marriott || hotelFilters?.platinum) {
-                links.push({ name: 'Marriott Bonvoy', url: marriottUrl, icon: '🌟', color: '#1C1C1C' });
-            }
-
-            // Add luxury beachfront link if filter selected
-            if (hotelFilters?.luxuryBeach) {
-                links.push({ name: 'Luxury Beach', url: luxuryBeachUrl, icon: '🏖️', color: '#00796B' });
-            }
-
-            return links;
-        }
-
-        // Format date for Marriott (MM/DD/YYYY) - parse as local date to avoid timezone issues
-        function formatMarriottDate(dateStr) {
-            const [year, month, day] = dateStr.split('-').map(Number);
-            return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-        }
-
-        // Generate Google Flights URL
-        function getGoogleFlightsUrl(origin, destination, departureDate, returnDate) {
-            // Google Flights URL format
-            return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departureDate}%20returning%20${returnDate}`;
-        }
-
-        function displayResults(results, minWeather, searchCriteria, hotelFilters) {
-            const container = document.getElementById('results');
-            let html = '';
-
-            // Show parsed search criteria if provided
-            const criteriaItems = [];
-            if (searchCriteria) {
-                if (searchCriteria.propertyType !== 'any') criteriaItems.push(`Type: ${searchCriteria.propertyType}`);
-                if (searchCriteria.floors) criteriaItems.push(`${searchCriteria.floors}-story`);
-                if (searchCriteria.beachProximity) criteriaItems.push('Near beach');
-                if (searchCriteria.pool) criteriaItems.push('Pool');
-                if (searchCriteria.clean) criteriaItems.push('Clean');
-                if (searchCriteria.nice) criteriaItems.push('Nice/Quality');
-                if (searchCriteria.minBedrooms) criteriaItems.push(`${searchCriteria.minBedrooms}+ bedrooms`);
-                if (searchCriteria.features.length) criteriaItems.push(...searchCriteria.features);
-            }
-            // Add hotel filter indicators
-            if (hotelFilters?.luxuryBeach) criteriaItems.push('🏖️ Luxury Beachfront');
-            if (hotelFilters?.marriott) criteriaItems.push('🌟 Marriott');
-            if (hotelFilters?.platinum) criteriaItems.push('⭐ Platinum/Elite');
-
-            if (criteriaItems.length > 0) {
-                    html += `
-                        <div style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                            <strong>Looking for:</strong>
-                            <span style="margin-left: 10px;">
-                                ${criteriaItems.map(item => `<span style="background: white; padding: 3px 10px; border-radius: 15px; margin: 2px; display: inline-block; font-size: 0.9em;">${item}</span>`).join('')}
-                            </span>
-                        </div>
-                    `;
-            }
-
-            results.forEach(result => {
-                const bestDays = result.weather ? result.weather.filter(d => d.score >= minWeather) : [];
-                const avgScore = bestDays.length > 0
-                    ? (bestDays.reduce((a, b) => a + b.score, 0) / bestDays.length).toFixed(1)
-                    : 0;
-
-                html += `
-                    <div class="location-card">
-                        <div class="location-header">
-                            <div class="location-name">${result.location.name}</div>
-                            <div class="weather-score">${'🦩'.repeat(Math.round(avgScore))}</div>
-                        </div>
-                        <div class="deals-section">
-                            <h3>7-Day Weather Forecast</h3>
-                            <div class="day-forecast">
-                                ${result.weather ? result.weather.map(day => `
-                                    <div class="day-card ${day.score >= minWeather ? 'best' : ''}">
-                                        <div class="day-name">${day.name.split(' ')[0]}</div>
-                                        <div class="day-temp">${day.temp}°F</div>
-                                        <div class="day-conditions">${day.conditions}</div>
-                                        <div class="flamingos">${'🦩'.repeat(day.score)}</div>
-                                    </div>
-                                `).join('') : '<p>Weather data unavailable</p>'}
-                            </div>
-
-                            <h3 style="margin-top: 20px;">Flights to ${result.location.airport}</h3>
-                            ${result.flights && result.flights.length > 0 ? `
-                                <div class="day-forecast" style="margin-bottom: 15px;">
-                                    ${result.flights.slice(0, 3).map(flight => `
-                                        <a href="${flight.bookingUrl || 'https://www.skyscanner.com/transport/flights/' + result.departure + '/' + result.location.airport + '/' + result.dates.start.replace(/-/g, '')}" target="_blank" style="text-decoration: none;">
-                                            <div class="day-card" style="min-width: 180px; background: linear-gradient(135deg, ${flight.source === 'Skyscanner' ? '#e8f5e9' : '#e3f2fd'} 0%, ${flight.source === 'Skyscanner' ? '#c8e6c9' : '#bbdefb'} 100%); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                <div style="font-weight: 600; color: ${flight.source === 'Skyscanner' ? '#2e7d32' : '#1565c0'};">$${flight.price}</div>
-                                                <div style="font-size: 0.85em; margin: 5px 0; color: #333;">
-                                                    ${flight.carrier || flight.itineraries?.[0]?.segments?.map(s => s.carrier + (s.flightNumber || '')).join(' → ') || 'Flight'}
-                                                </div>
-                                                <div style="font-size: 0.8em; color: #666;">
-                                                    ${flight.direct ? '✈️ Direct' : flight.itineraries?.[0]?.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || 'Connecting'}
-                                                </div>
-                                                <div style="font-size: 0.75em; color: #888; margin-top: 5px;">
-                                                    ${flight.seatsAvailable ? flight.seatsAvailable + ' seats • ' : ''}${flight.bookingClass || 'Economy'}
-                                                </div>
-                                                <span class="verification-badge verified" style="margin-top: 5px; background: ${flight.source === 'Skyscanner' ? '#c8e6c9' : '#d4edda'};">${flight.source || 'AMADEUS'}</span>
-                                                <div style="font-size: 0.7em; color: ${flight.source === 'Skyscanner' ? '#2e7d32' : '#1565c0'}; margin-top: 5px;">Click to book →</div>
-                                            </div>
-                                        </a>
-                                    `).join('')}
-                                </div>
-                            ` : `
-                                <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
-                                    No flights found
-                                    <a href="https://www.skyscanner.com/transport/flights/${result.departure}/${result.location.airport}/${result.dates.start.replace(/-/g, '')}" target="_blank" style="color: #1565c0; margin-left: 10px;">Search Skyscanner →</a>
-                                </p>
-                            `}
-
-                            <h3 style="margin-top: 20px;">Hotels (Real Amadeus Data)</h3>
-                            ${result.hotels && result.hotels.length > 0 ? `
-                                <div class="day-forecast" style="margin-bottom: 15px;">
-                                    ${result.hotels.slice(0, 4).map(hotel => `
-                                        <a href="https://www.google.com/travel/hotels?q=${encodeURIComponent(hotel.name + ' ' + result.location.name)}" target="_blank" style="text-decoration: none;">
-                                            <div class="day-card" style="min-width: 200px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                <div style="font-weight: 600; color: #333;">${hotel.name?.substring(0, 25) || 'Hotel'}${hotel.name?.length > 25 ? '...' : ''}</div>
-                                                ${hotel.pricePerNight ? `<div style="font-size: 1.2em; color: #28a745; margin: 5px 0;">$${hotel.pricePerNight}/night</div>` : ''}
-                                                ${hotel.rating ? `<div style="font-size: 0.85em; color: #f39c12;">${'★'.repeat(parseInt(hotel.rating))}${'☆'.repeat(5-parseInt(hotel.rating))}</div>` : ''}
-                                                <div style="font-size: 0.8em; color: #666; margin-top: 5px;">${hotel.roomType?.substring(0, 30) || 'Standard Room'}</div>
-                                                <span class="verification-badge verified" style="margin-top: 5px;">REAL DATA</span>
-                                                <div style="font-size: 0.7em; color: #1565c0; margin-top: 5px;">Click to book →</div>
-                                            </div>
-                                        </a>
-                                    `).join('')}
-                                </div>
-                            ` : `
-                                <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
-                                    No hotel availability in Amadeus sandbox for these dates
-                                </p>
-                            `}
-
-                            <h3 style="margin-top: 20px;">Search Vacation Rentals</h3>
-                            <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Click to search with your criteria pre-filled:</p>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                ${generateSearchLinks(result.location.name, result.dates, result.maxBudget, searchCriteria, hotelFilters).map(link => `
-                                    <a href="${link.url}" target="_blank" style="text-decoration: none;">
-                                        <div style="background: ${link.color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
-                                            ${link.icon} ${link.name}
-                                        </div>
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                return true;
             });
 
-            container.innerHTML = html;
+            statusText.textContent = `Scanning ${eligibleDests.length} destinations...`;
+
+            // Fetch weather for all destinations in parallel
+            const results = [];
+
+            for (let i = 0; i < eligibleDests.length; i++) {
+                const [code, dest] = eligibleDests[i];
+                statusText.textContent = `Checking weather in ${dest.name}... (${i + 1}/${eligibleDests.length})`;
+
+                const weather = await fetchWeather(dest);
+                if (!weather) {
+                    // Still show destination even if weather fetch failed
+                    results.push({
+                        code,
+                        dest,
+                        weather: null,
+                        windows: [],
+                        bestWindow: [],
+                        score: 0,
+                        routes: getRoutesFromAirports(dest, selectedAirports),
+                        status: 'Weather unavailable'
+                    });
+                    continue;
+                }
+
+                const windows = findSunballWindows(weather, criteria);
+
+                // Always include destination, even with no perfect windows
+                let bestWindow = [];
+                let score = 0;
+                let status = '';
+
+                if (windows.length > 0) {
+                    // Get best window
+                    bestWindow = windows.reduce((best, w) => {
+                        const wScore = calculateSunballScore(w, criteria);
+                        const bestScore = calculateSunballScore(best, criteria);
+                        return wScore > bestScore ? w : best;
+                    }, windows[0]);
+                    score = calculateSunballScore(bestWindow, criteria);
+                    status = `${bestWindow.length}-day window`;
+                } else {
+                    // Calculate partial score based on best available days
+                    const goodDays = weather.filter(d => {
+                        const meetsTemp = d.feelsLike >= (criteria.targetTemp - criteria.tempRange) &&
+                                         d.feelsLike <= (criteria.targetTemp + criteria.tempRange);
+                        const meetsSun = d.sunshine >= criteria.minSunshine;
+                        return meetsTemp || meetsSun;
+                    });
+                    score = Math.min(40, goodDays.length * 8); // Partial score
+                    status = goodDays.length > 0 ? `${goodDays.length} good days (not consecutive)` : 'No matching days';
+                }
+
+                results.push({
+                    code,
+                    dest,
+                    weather,
+                    windows,
+                    bestWindow,
+                    score,
+                    routes: getRoutesFromAirports(dest, selectedAirports),
+                    status
+                });
+            }
+
+            // Sort by score
+            results.sort((a, b) => b.score - a.score);
+
+            statusBar.classList.remove('active');
+            btn.disabled = false;
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <h3>🦩 No Destinations Available</h3>
+                        <p>Check your airport and filter selections</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render results
+            resultsDiv.innerHTML = `<div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
         }
+
+        function renderDestinationCard(result, criteria, hotelFilter) {
+            const { code, dest, weather, bestWindow, score, routes, status } = result;
+            const isPerfect = score >= 85;
+            const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
+
+            // Build hotel links
+            let hotels = [];
+            if (hotelFilter === 'all' || hotelFilter === 'marriott') {
+                hotels = hotels.concat(dest.hotels.marriott.map(h => ({ name: h, type: 'marriott' })));
+            }
+            if (hotelFilter === 'all') {
+                hotels = hotels.concat(dest.hotels.noble.map(h => ({ name: h, type: 'noble' })));
+            }
+            if (hotelFilter === 'all' || hotelFilter === 'beach') {
+                hotels = hotels.concat(dest.hotels.beach.map(h => ({ name: h, type: 'beach' })));
+            }
+
+            // Cannabis status
+            const cannabisNote = dest.cannabis === 'recreational'
+                ? `<div class="cannabis-note">✓ Recreational cannabis legal in ${dest.state}</div>`
+                : `<div class="cannabis-note">✓ Medical cannabis available in ${dest.state}</div>`;
+
+            return `
+                <div class="sunball-card ${isPerfect ? 'perfect' : ''}" onclick="this.classList.toggle('expanded')">
+                    <div class="card-header" style="position: relative;">
+                        <span class="expand-hint">click to expand</span>
+                        <div class="destination-info">
+                            <h3>${dest.name}</h3>
+                            <div class="destination-meta">
+                                <span class="meta-badge jetblue">✈️ ${code}</span>
+                                <span class="meta-badge cannabis">${dest.cannabis === 'recreational' ? '🌿 Rec' : '🌿 Med'}</span>
+                            </div>
+                        </div>
+                        <div class="sunball-score">
+                            <div class="score-value">${score}</div>
+                            <div class="score-label">sunball score</div>
+                        </div>
+                    </div>
+
+                    <div class="weather-window">
+                        <div class="window-title">
+                            ${hasWindow ? `🦩 ${bestWindow.length}-Day Sunball Window` : `☀️ ${status || 'Checking conditions...'}`}
+                        </div>
+                        <div class="weather-days">
+                            ${weather ? weather.slice(0, 7).map(day => {
+                                const inWindow = bestWindow && bestWindow.some(w => w.name === day.name);
+                                const meetsTemp = day.feelsLike >= (criteria.targetTemp - criteria.tempRange) &&
+                                                  day.feelsLike <= (criteria.targetTemp + criteria.tempRange);
+                                const meetsSun = day.sunshine >= criteria.minSunshine;
+                                return `
+                                    <div class="weather-day ${inWindow ? 'perfect' : ''}">
+                                        <div class="day-name">${day.name.split(' ')[0].substring(0, 3)}</div>
+                                        <div class="day-temp">${day.temp}°</div>
+                                        <div class="day-feels">feels ${day.feelsLike}°</div>
+                                        <div class="day-sun">${getSunEmoji(day.sunshine)}</div>
+                                        <div class="day-conditions">${day.conditions.substring(0, 12)}</div>
+                                    </div>
+                                `;
+                            }).join('') : '<div style="color: #888; padding: 20px;">Weather data unavailable</div>'}
+                        </div>
+                    </div>
+
+                    <div class="flights-section">
+                        <div class="section-title">✈️ Nonstop Flights</div>
+                        <div class="flight-options">
+                            ${routes.map(route => route.airlines.map(airline => `
+                                <a href="${AIRLINES[airline]?.url(route.origin, code) || '#'}"
+                                   target="_blank" class="flight-chip" onclick="event.stopPropagation()" style="border-color: ${AIRLINES[airline]?.color || '#666'}40; background: ${AIRLINES[airline]?.color || '#666'}20;">
+                                    <span class="origin">${route.origin}</span> → ${code}
+                                    <span style="opacity: 0.8; margin-left: 5px;">${airline}</span>
+                                </a>
+                            `).join('')).join('')}
+                        </div>
+                    </div>
+
+                    <div class="hotels-section">
+                        <div class="section-title">🏨 Hotels</div>
+                        <div class="hotel-chips">
+                            ${hotels.slice(0, 4).map(h => `
+                                <a href="https://www.google.com/search?q=${encodeURIComponent(h.name + ' ' + dest.name + ' hotel')}"
+                                   target="_blank" class="hotel-chip ${h.type}" onclick="event.stopPropagation()">
+                                    ${h.type === 'marriott' ? '🏨' : h.type === 'noble' ? '✨' : '🏖️'} ${h.name.substring(0, 25)}${h.name.length > 25 ? '...' : ''}
+                                </a>
+                            `).join('')}
+                            <a href="https://www.marriott.com/search/findHotels.mi?destinationAddress.city=${encodeURIComponent(dest.name)}&destinationAddress.stateProvince=${dest.state}"
+                               target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
+                                🔍 All Marriott
+                            </a>
+                        </div>
+                        ${cannabisNote}
+                    </div>
+
+                    ${dest.restaurants && dest.restaurants.length > 0 ? `
+                    <div class="restaurants-section" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div class="section-title">🍽️ Recommended Restaurants</div>
+                        <div class="hotel-chips">
+                            ${dest.restaurants.slice(0, 4).map(r => `
+                                <a href="https://www.opentable.com/s?term=${encodeURIComponent(r)}&queryUnderstandingType=location&originCorrelationId=&corrid="
+                                   target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.4); background: rgba(218,55,67,0.15);">
+                                    🍽️ ${r}
+                                </a>
+                            `).join('')}
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <a href="https://www.opentable.com/s?term=${encodeURIComponent(dest.name)}&queryUnderstandingType=location"
+                               target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.5); background: rgba(218,55,67,0.2);">
+                                🔍 OpenTable ${dest.name}
+                            </a>
+                            <a href="https://resy.com/cities/${dest.name.toLowerCase().replace(/[^a-z]/g, '-').replace(/-+/g, '-')}"
+                               target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(199,21,21,0.5); background: rgba(199,21,21,0.2);">
+                                🔍 Resy ${dest.name}
+                            </a>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function getNextWeekDate() {
+            const d = new Date();
+            d.setDate(d.getDate() + 7);
+            return d.toISOString().split('T')[0];
+        }
+
+        // Initialize
+        updateTempDisplay();
     </script>
 </body>
 </html>
