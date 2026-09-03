@@ -4,10 +4,6 @@ compatibility_date = "2024-01-01"
 # Pages Functions configuration
 pages_build_output_dir = "."
 
-[vars]
-# Amadeus sandbox credentials (safe to include - sandbox only)
-AMADEUS_CLIENT_ID = "TxHvvDOaq7kAwF8e9CgrKmNIGblZnYKs"
-AMADEUS_CLIENT_SECRET = "LJrvgjNbK4a6lgUC"
-
-# For production, set these via `wrangler pages secret put`:
-# GOOGLE_MAPS_KEY
+# Runtime credentials belong in Cloudflare Pages Secrets, not source control:
+# wrangler pages secret put AMADEUS_CLIENT_ID
+# wrangler pages secret put AMADEUS_CLIENT_SECRET

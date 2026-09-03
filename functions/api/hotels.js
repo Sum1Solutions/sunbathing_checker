@@ -9,8 +9,9 @@ async function getAmadeusToken(env) {
     return amadeusToken;
   }
 
-  const clientId = env.AMADEUS_CLIENT_ID || 'TxHvvDOaq7kAwF8e9CgrKmNIGblZnYKs';
-  const clientSecret = env.AMADEUS_CLIENT_SECRET || 'LJrvgjNbK4a6lgUC';
+  const clientId = env.AMADEUS_CLIENT_ID;
+  const clientSecret = env.AMADEUS_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('Amadeus credentials are not configured');
 
   const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
     method: 'POST',

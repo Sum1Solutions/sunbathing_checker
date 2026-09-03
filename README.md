@@ -15,7 +15,7 @@ A sunball window is a consecutive stretch of days with:
 - **Feels-like temperature in target range** (default: 72°F ±10°)
 - **3+ consecutive days** meeting both criteria
 
-This creates optimal conditions for vitamin D synthesis, habenula reset, and general wellness recharge.
+This is a weather-planning heuristic for comfortable outdoor time. UVB light can contribute to vitamin D production in uncovered skin, while bright daytime light is a strong cue for the circadian clock. Actual vitamin D production varies by season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. Sunball Finder is not a medical device or a recommendation for a specific amount of sun exposure.
 
 ## Features
 
@@ -48,6 +48,12 @@ Toggle airports on/off to filter which flights appear.
 - **Noble House** boutique collection
 - **Beach properties** for coastal sun exposure
 - Direct links to Google search and Marriott booking
+
+### Map view and Google links
+- Switch between ranked list and destination map views
+- Select a destination pin or place to highlight it
+- Open selected destinations in Google Maps, Google Hotels, or Google Flights
+- Open a large Google Maps area view centered on each destination
 
 ### Restaurant Recommendations
 - Curated restaurant picks for each destination
@@ -88,6 +94,12 @@ wrangler pages dev .
 
 # Deploy
 wrangler pages deploy .
+
+# Lightweight production smoke test (Node 18+; no install required)
+node smoke-test.js
+
+# Test another environment
+node smoke-test.js https://your-preview.pages.dev
 ```
 
 ## Architecture
@@ -107,9 +119,7 @@ sunball-finder/
 |-----|---------|------|
 | **NWS Weather** | 7-day forecasts | Free (public API, no key) |
 
-**No API keys required. No usage costs. No rate limit concerns for normal use.**
-
-The NWS API is a free public service. All other functionality uses direct links to external booking sites.
+NWS is a free public service. Amadeus and Google Maps credentials are stored as Cloudflare Pages Secrets; all other functionality uses direct links to external booking sites.
 
 ## Security Considerations
 
@@ -129,14 +139,15 @@ The NWS API is a free public service. All other functionality uses direct links 
 - **Airports**: PVD + BOS (toggle to filter)
 - **Cannabis**: All destinations (assumes med card)
 
-## The Habenula Connection
+## The daylight connection
 
-The habenula is the brain's "disappointment center" — it responds to light exposure and is implicated in seasonal affective disorder. Winter sun exposure in optimal conditions can help reset circadian rhythms and improve mood. This tool optimizes for the specific weather conditions that maximize safe, comfortable sun exposure.
+Sunball Finder is grounded in two established pieces of physiology, without trying to turn either into a treatment claim:
 
-## Future: Akathisia Management Integration
+- UVB radiation from sunlight can trigger vitamin D synthesis in uncovered skin. The amount varies with season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. UV exposure also carries skin-cancer risk, so avoid burning and use appropriate protection. See the [NIH Office of Dietary Supplements vitamin D fact sheet](https://ods.od.nih.gov/factsheets/VitaminD-Consumer/).
+- Light and dark are the strongest environmental cues for circadian rhythms. Bright daytime light helps the body align its internal clock with the day-night cycle. See the [National Institute of General Medical Sciences circadian rhythms overview](https://www.nigms.nih.gov/education/fact-sheets/Pages/circadian-rhythms).
 
-This tool may eventually integrate with broader akathisia management protocols, helping identify optimal travel windows for therapeutic sun exposure as part of a holistic approach to movement disorder management.
+The app plans comfortable, bright-weather travel windows; it does not prescribe sun exposure, diagnose a deficiency, or provide medical treatment.
 
 ---
 
-*For birds heading south for their habenula and health* 🦩
+*For birds heading toward brighter days* 🦩

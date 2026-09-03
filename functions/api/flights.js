@@ -10,8 +10,9 @@ async function getAmadeusToken(env) {
     return amadeusToken;
   }
 
-  const clientId = env.AMADEUS_CLIENT_ID || 'TxHvvDOaq7kAwF8e9CgrKmNIGblZnYKs';
-  const clientSecret = env.AMADEUS_CLIENT_SECRET || 'LJrvgjNbK4a6lgUC';
+  const clientId = env.AMADEUS_CLIENT_ID;
+  const clientSecret = env.AMADEUS_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('Amadeus credentials are not configured');
 
   const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
     method: 'POST',
@@ -37,7 +38,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const { origin, destination, departureDate, returnDate, adults = 1 } = body;
+    const { origin, destination, departureDate, returnDate, adults = 1, nonStop = true } = body;
 
     const token = await getAmadeusToken(env);
 
@@ -47,6 +48,7 @@ export async function onRequestPost(context) {
     searchUrl.searchParams.set('departureDate', departureDate);
     if (returnDate) searchUrl.searchParams.set('returnDate', returnDate);
     searchUrl.searchParams.set('adults', adults.toString());
+    if (nonStop) searchUrl.searchParams.set('nonStop', 'true');
     searchUrl.searchParams.set('max', '5');
     searchUrl.searchParams.set('currencyCode', 'USD');
 
@@ -64,7 +66,9 @@ export async function onRequestPost(context) {
       }), { headers: corsHeaders });
     }
 
-    const flights = (flightData.data || []).map(offer => ({
+    const flights = (flightData.data || []).filter(offer => {
+      return !nonStop || offer.itineraries?.every(itinerary => (itinerary.segments || []).length === 1);
+    }).map(offer => ({
       id: offer.id,
       price: parseFloat(offer.price.total),
       currency: offer.price.currency,

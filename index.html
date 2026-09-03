@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracey's Sunball Finder</title>
+    <title>Tracey’s Sunball Locator</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -432,19 +432,147 @@
         footer a {
             color: #88c0d0;
         }
+
+        /* Sunball 3.0 visual system */
+        :root {
+            --ink: #102a43;
+            --muted: #627d98;
+            --paper: #f7f4ed;
+            --card: #fffdf8;
+            --coral: #ff4fa3;
+            --coral-dark: #e82f80;
+            --sun: #ff4fa3;
+            --mint: #a9d9c7;
+            --line: rgba(16, 42, 67, .12);
+        }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            padding: 0 24px 36px;
+        }
+        .container { max-width: 1240px; }
+        header {
+            position: relative;
+            text-align: left;
+            padding: 54px 0 42px;
+            min-height: 300px;
+            display: grid;
+            align-content: center;
+            margin-bottom: 0;
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            right: 5%; top: 15px;
+            width: 170px; height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 38% 35%, #ffb8d5, var(--sun) 55%, #e82f80);
+            opacity: .8;
+            z-index: -1;
+            box-shadow: 0 0 0 26px rgba(247,185,85,.12), 0 0 0 52px rgba(247,185,85,.06);
+        }
+        h1 {
+            color: var(--ink);
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: clamp(2.25rem, 5.1vw, 4.65rem);
+            font-weight: 500;
+            letter-spacing: -.06em;
+            line-height: .92;
+            text-shadow: none;
+            margin: 11px 0 16px;
+            max-width: none;
+            white-space: nowrap;
+        }
+        h1::first-letter { color: var(--coral); }
+        .subtitle { color: var(--muted); font-size: 1.12rem; max-width: 510px; line-height: 1.5; margin:0; }
+        .subtitle::before { content: none; }
+        .control-panel {
+            background: var(--ink);
+            border-radius: 24px;
+            padding: 26px;
+            margin-bottom: 28px;
+            border: 0;
+            box-shadow: 0 18px 45px rgba(16,42,67,.16);
+        }
+        .panel-title { color: #fff; margin-bottom: 20px; font-size: 1.1rem; }
+        .criteria-grid { gap: 12px; margin-bottom: 12px; }
+        .criteria-item { background: rgba(255,255,255,.08); border-radius: 14px; padding: 16px; }
+        .criteria-item label { color: #b9c9d6; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .criteria-item input, .criteria-item select { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); color: #fff; }
+        .criteria-item select option { color: var(--ink); }
+        .range-display { color: var(--sun); font-weight: 700; }
+        input[type=range] { accent-color: var(--coral); }
+        .airport-toggles { gap: 8px; }
+        .toggle-btn { border-color: rgba(255,255,255,.2); color: #b9c9d6; padding: 9px 14px; }
+        .toggle-btn.active { background: var(--coral); border-color: var(--coral); }
+        .scan-btn { background: var(--coral); padding: 15px 28px; font-size: 1rem; text-transform: none; letter-spacing: 0; margin: 18px 0 0; box-shadow: 0 10px 24px rgba(255,79,163,.28); }
+        .scan-btn:hover { background: #ff72b6; transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,79,163,.38); }
+        .status-bar { background: #e8f0ef; border: 1px solid var(--line); color: var(--ink); }
+        .status-text { color: var(--ink); }
+        .spinner { border-top-color: var(--coral); }
+        .sunball-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+        .sunball-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 6px 20px rgba(16,42,67,.06); color: var(--ink); }
+        .sunball-card:hover { border-color: rgba(255,79,163,.55); box-shadow: 0 14px 30px rgba(16,42,67,.12); }
+        .sunball-card.perfect { border: 2px solid var(--coral); box-shadow: 0 8px 28px rgba(255,79,163,.16); }
+        .card-header { background: linear-gradient(135deg, #173c59, #102a43); padding: 21px; }
+        .destination-info h3 { font-family: Georgia, serif; font-size: 1.55rem; font-weight: 500; }
+        .meta-badge { background: rgba(255,255,255,.12); }
+        .meta-badge.cannabis { background: rgba(169,217,199,.2); color: #bcebd9; }
+        .meta-badge.jetblue { background: rgba(255,255,255,.12); color: #d7e6f4; }
+        .score-value { color: var(--sun); font-family: Georgia, serif; font-size: 2.7rem; }
+        .score-label { color: #b9c9d6; }
+        .weather-window { background: #f2eee5; padding: 18px 20px; }
+        .window-title { color: var(--coral-dark); font-weight: 800; }
+        .weather-day { background: rgba(255,255,255,.68); border: 1px solid rgba(16,42,67,.06); }
+        .weather-day.perfect { background: #fff0f6; border-color: rgba(255,79,163,.45); }
+        .day-name, .day-feels { color: var(--muted); }
+        .day-temp { color: var(--ink); }
+        .flights-section, .hotels-section, .restaurants-section { border-color: var(--line) !important; }
+        .section-title { color: var(--muted); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: .72rem; }
+        .flight-chip { color: var(--ink); border-color: rgba(16,42,67,.14) !important; background: #e8f0ef !important; }
+        .flight-chip:hover { background: #d5e7e2 !important; }
+        .hotel-chip { color: var(--ink); background: #fff !important; border-color: var(--line) !important; }
+        .hotel-chip:hover { border-color: var(--coral) !important; background: #fff0f6 !important; }
+        .cannabis-note { background: #e8f4ed; color: #287557; border-color: #53a984; }
+        .flamingo-mark { display:inline-flex; align-items:center; gap:8px; color:var(--coral-dark); font-size:.76rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px; }
+        .flamingo-mark .bird { display:inline-grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#ffe0f0; font-size:1.7rem; box-shadow:0 5px 14px rgba(255,79,163,.18); }
+        .google-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+        .google-action { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; text-decoration:none; font-size:.76rem; font-weight:800; }
+        .route-loading { color:var(--muted); font-size:.78rem; padding:8px 0; }
+        .flights-section .google-actions, .hotels-section .google-actions { padding-top:12px; border-top:1px solid rgba(16,42,67,.08); }
+        .flight-options, .hotel-chips { margin-top:4px; }
+        .no-results { color: var(--muted); }
+        footer { color: var(--muted); padding-top: 34px; }
+        footer a { color: var(--coral-dark); }
+        .science-note { max-width: 760px; margin: 0 auto 22px; padding: 18px 20px; text-align:left; background:#fff7fb; border:1px solid rgba(255,79,163,.18); border-radius:16px; color:var(--muted); line-height:1.55; }
+        .science-note strong { color:var(--ink); }
+        @media (max-width: 640px) {
+            body { padding: 0 14px 25px; }
+            header { padding: 34px 0 25px; }
+            header::before { width: 100px; height: 100px; right: 0; opacity: .55; }
+            h1 { font-size: clamp(1.6rem, 8vw, 2.6rem); }
+            .control-panel { padding: 16px; border-radius: 18px; }
+            .sunball-grid { grid-template-columns: 1fr; }
+            .scan-btn { width: 100%; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🦩 Sunball Finder 🦩</h1>
-            <p class="subtitle">Finding perfect weather windows for Vitamin D & wellness recharge</p>
+            <div class="flamingo-mark"><span class="bird" aria-hidden="true">🦩</span> follow the light</div>
+            <h1>Tracey’s Sunball Locator</h1>
+            <p class="subtitle">A little more light; a little less cold.</p>
         </header>
 
         <div class="control-panel">
-            <div class="panel-title">⚙️ Sunball Criteria</div>
-
+            <div class="panel-title">☀️ Set your ideal escape</div>
             <div class="criteria-grid">
+                <div class="criteria-item">
+                    <label for="escapeStart">Escape starts</label>
+                    <input type="date" id="escapeStart" onchange="updateEscapeEnd()">
+                    <div class="range-display" id="escapeStartDisplay">Tomorrow</div>
+                </div>
                 <div class="criteria-item">
                     <label>Target Temperature (feels like)</label>
                     <input type="range" id="targetTemp" min="65" max="85" value="72" oninput="updateTempDisplay()">
@@ -503,7 +631,7 @@
             </div>
 
             <button class="scan-btn" id="scanBtn" onclick="scanForSunballs()">
-                🔍 Find Sunball Windows
+                Find my sunball windows <span aria-hidden="true">→</span>
             </button>
         </div>
 
@@ -517,8 +645,12 @@
         <div id="results"></div>
 
         <footer>
-            <p>For birds heading south for their habenula and health 🦩</p>
-            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank">NWS</a> | Flights: JetBlue nonstops from New England</p>
+            <div class="science-note">
+                <strong>Why daylight matters.</strong> UVB light can help uncovered skin make vitamin D, although the amount varies with season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. Bright daytime light is also one of the strongest cues for the body’s circadian clock. Protect your skin, avoid burning, and treat this planner as travel inspiration—not a vitamin D prescription or medical treatment.
+                <span style="display:block; margin-top:9px; font-size:.78rem;"><a href="https://ods.od.nih.gov/factsheets/VitaminD-Consumer/" target="_blank" rel="noopener">NIH vitamin D facts</a> · <a href="https://www.nigms.nih.gov/education/fact-sheets/Pages/circadian-rhythms" target="_blank" rel="noopener">NIH circadian rhythms</a></span>
+            </div>
+            <p>For birds heading toward brighter days 🦩</p>
+            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank" rel="noopener">NWS</a> | Flights and hotel averages: Amadeus sandbox when available</p>
         </footer>
     </div>
 
@@ -939,11 +1071,44 @@
                 if (!forecastResp.ok) throw new Error('Forecast API failed');
 
                 const forecastData = await forecastResp.json();
-                return processWeather(forecastData.properties.periods);
+                return { days: processWeather(forecastData.properties.periods), source: 'live' };
             } catch (error) {
                 console.error(`Weather fetch failed for ${dest.name}:`, error);
-                return null;
+                // Keep the experience useful for destinations outside NWS coverage
+                // and during local development. This is clearly labeled as an estimate.
+                return { days: generateDemoWeather(dest), source: 'estimate' };
             }
+        }
+
+        function formatDateForDisplay(dateString) {
+            return new Date(`${dateString}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function updateEscapeEnd() {
+            const startInput = document.getElementById('escapeStart');
+            if (!startInput || !startInput.value) return;
+            document.getElementById('escapeStartDisplay').textContent = formatDateForDisplay(startInput.value);
+        }
+
+        function generateDemoWeather(dest) {
+            const today = new Date();
+            const warmth = Math.max(0, Math.min(1, (30 - Math.abs(dest.lat - 26)) / 30));
+            return Array.from({ length: 7 }, (_, index) => {
+                const date = new Date(today);
+                date.setDate(today.getDate() + index + 1);
+                const wave = Math.sin(index * 1.7 + dest.lat) * 4;
+                const temp = Math.round(65 + warmth * 20 + wave);
+                const sunshine = Math.round(Math.max(45, Math.min(98, 76 + warmth * 18 + Math.cos(index + dest.lon) * 10)));
+                return {
+                    name: date.toLocaleDateString('en-US', { weekday: 'long' }),
+                    date: date.toISOString().split('T')[0],
+                    temp,
+                    feelsLike: temp,
+                    nightTemp: temp - 14,
+                    conditions: sunshine > 88 ? 'Sunny' : sunshine > 70 ? 'Mostly sunny' : 'Partly cloudy',
+                    wind: '8 mph', sunshine
+                };
+            });
         }
 
         function processWeather(periods) {
@@ -1069,21 +1234,8 @@
                 const [code, dest] = eligibleDests[i];
                 statusText.textContent = `Checking weather in ${dest.name}... (${i + 1}/${eligibleDests.length})`;
 
-                const weather = await fetchWeather(dest);
-                if (!weather) {
-                    // Still show destination even if weather fetch failed
-                    results.push({
-                        code,
-                        dest,
-                        weather: null,
-                        windows: [],
-                        bestWindow: [],
-                        score: 0,
-                        routes: getRoutesFromAirports(dest, selectedAirports),
-                        status: 'Weather unavailable'
-                    });
-                    continue;
-                }
+                const weatherResult = await fetchWeather(dest);
+                const weather = weatherResult.days;
 
                 const windows = findSunballWindows(weather, criteria);
 
@@ -1117,6 +1269,7 @@
                     code,
                     dest,
                     weather,
+                    weatherSource: weatherResult.source,
                     windows,
                     bestWindow,
                     score,
@@ -1142,11 +1295,75 @@
             }
 
             // Render results
-            resultsDiv.innerHTML = `<div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
+            const top = results[0];
+            const liveCount = results.filter(r => r.weatherSource === 'live').length;
+            resultsDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin: 10px 0 18px; flex-wrap:wrap;">
+                    <div><div style="color:var(--coral-dark); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase;">Your sunny shortlist</div>
+                    <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${results.length} places worth a look</h2></div>
+                    <div style="color:var(--muted); font-size:.83rem;">Best match: <strong style="color:var(--ink);">${top.dest.name}</strong> · ${liveCount}/${results.length} live forecasts</div>
+                </div>
+                <div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
+            verifyAllRoutes(results);
+        }
+
+        const AIRLINE_NAMES = { B6: 'JetBlue', WN: 'Southwest', MX: 'Breeze', NK: 'Spirit', F9: 'Frontier' };
+
+        async function verifyAllRoutes(results) {
+            const dates = getEscapeDates();
+            await Promise.all(results.map(async result => {
+                const candidates = getRoutesFromAirports(result.dest, selectedAirports);
+                const liveRoutes = [];
+                await Promise.all(candidates.map(async route => {
+                    try {
+                        const response = await fetch('/api/flights', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ origin: route.origin, destination: result.code, departureDate: dates.start, returnDate: dates.end, adults: 1, nonStop: true })
+                        }).then(r => r.json());
+                        const airlines = [...new Set((response.flights || []).map(flight => AIRLINE_NAMES[flight.carrier] || flight.carrier).filter(Boolean))];
+                        if (response.success && airlines.length) liveRoutes.push({ origin: route.origin, airlines });
+                    } catch (error) { /* keep this route unverified */ }
+                }));
+                const options = document.querySelector(`[data-route-options="${result.code}"]`);
+                if (options) options.outerHTML = renderVerifiedRoutes(liveRoutes, result.code);
+                const googleActions = document.querySelector(`[data-google-flights="${result.code}"]`);
+                if (googleActions) googleActions.outerHTML = renderGoogleFlightActions(liveRoutes, result.code);
+            }));
+        }
+
+        function renderVerifiedRoutes(routes, code) {
+            if (!routes.length) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">No verified nonstop offers found for these dates.</span></div>`;
+            return `<div class="flight-options" data-route-options="${code}">${routes.map(route => route.airlines.map(airline => `<a href="${AIRLINES[airline]?.url(route.origin, code) || googleFlightsUrl(route.origin, code)}" target="_blank" rel="noopener" class="flight-chip" onclick="event.stopPropagation()"><span class="origin">${route.origin}</span> → ${code}<span style="opacity:.8; margin-left:5px;">${airline} · verified nonstop</span></a>`).join('')).join('')}</div>`;
+        }
+
+        function renderGoogleFlightActions(routes, code) {
+            if (!routes.length) return `<div class="google-actions" data-google-flights="${code}"><span class="no-flights">No verified nonstop route found.</span></div>`;
+            return `<div class="google-actions" data-google-flights="${code}">${routes.map(route => `<a class="google-action" href="${googleFlightsUrl(route.origin, code)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▣ Google Flights · ${route.origin}</a>`).join('')}</div>`;
+        }
+        function googleHotelsUrl(dest) {
+            const dates = getEscapeDates();
+            return `https://www.google.com/travel/search?q=${encodeURIComponent(`4 star hotels in ${dest.name}, ${dest.state} ${dates.start} to ${dates.end}`)}`;
+        }
+
+        function googleFlightsUrl(origin, destination) {
+            const dates = getEscapeDates();
+            return `https://www.google.com/travel/flights?q=${encodeURIComponent(`flights from ${origin} to ${destination} ${dates.start} to ${dates.end}`)}`;
+        }
+
+        function getEscapeDates() {
+            const start = document.getElementById('escapeStart')?.value || getNextWeekDate();
+            const endDate = new Date(`${start}T12:00:00`);
+            endDate.setDate(endDate.getDate() + 9);
+            const end = endDate.toISOString().split('T')[0];
+            return { start, end };
+        }
+
+        function googleMapsPlaceUrl(dest) {
+            return `https://www.google.com/maps/@?api=1&map_action=map&center=${dest.lat},${dest.lon}&zoom=11`;
         }
 
         function renderDestinationCard(result, criteria, hotelFilter) {
-            const { code, dest, weather, bestWindow, score, routes, status } = result;
+            const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
             const isPerfect = score >= 85;
             const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
 
@@ -1168,7 +1385,7 @@
                 : `<div class="cannabis-note">✓ Medical cannabis available in ${dest.state}</div>`;
 
             return `
-                <div class="sunball-card ${isPerfect ? 'perfect' : ''}" onclick="this.classList.toggle('expanded')">
+                <div class="sunball-card ${isPerfect ? 'perfect' : ''}" data-destination="${code}" onclick="this.classList.toggle('expanded')">
                     <div class="card-header" style="position: relative;">
                         <span class="expand-hint">click to expand</span>
                         <div class="destination-info">
@@ -1187,6 +1404,7 @@
                     <div class="weather-window">
                         <div class="window-title">
                             ${hasWindow ? `🦩 ${bestWindow.length}-Day Sunball Window` : `☀️ ${status || 'Checking conditions...'}`}
+                            <span style="margin-left:auto; font-size:.62rem; color:var(--muted); font-weight:600;">${weatherSource === 'live' ? 'LIVE NWS' : 'ESTIMATE'}</span>
                         </div>
                         <div class="weather-days">
                             ${weather ? weather.slice(0, 7).map(day => {
@@ -1209,15 +1427,8 @@
 
                     <div class="flights-section">
                         <div class="section-title">✈️ Nonstop Flights</div>
-                        <div class="flight-options">
-                            ${routes.map(route => route.airlines.map(airline => `
-                                <a href="${AIRLINES[airline]?.url(route.origin, code) || '#'}"
-                                   target="_blank" class="flight-chip" onclick="event.stopPropagation()" style="border-color: ${AIRLINES[airline]?.color || '#666'}40; background: ${AIRLINES[airline]?.color || '#666'}20;">
-                                    <span class="origin">${route.origin}</span> → ${code}
-                                    <span style="opacity: 0.8; margin-left: 5px;">${airline}</span>
-                                </a>
-                            `).join('')).join('')}
-                        </div>
+                        <div class="flight-options" data-route-options="${code}"><span class="route-loading">Checking live nonstop availability…</span></div>
+                        <div class="google-actions" data-google-flights="${code}"><span class="route-loading">Checking Google Flights routes…</span></div>
                     </div>
 
                     <div class="hotels-section">
@@ -1233,6 +1444,10 @@
                                target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
                                 🔍 All Marriott
                             </a>
+                        </div>
+                        <div class="google-actions">
+                            <a class="google-action" href="${googleHotelsUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌂ Search Google Hotels</a>
+                            <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Open area in Maps</a>
                         </div>
                         ${cannabisNote}
                     </div>
@@ -1272,6 +1487,11 @@
 
         // Initialize
         updateTempDisplay();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('escapeStart').min = tomorrow.toISOString().split('T')[0];
+        document.getElementById('escapeStart').value = tomorrow.toISOString().split('T')[0];
+        updateEscapeEnd();
     </script>
 </body>
 </html>
