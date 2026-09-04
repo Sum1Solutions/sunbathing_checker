@@ -1,6 +1,6 @@
-# Sunball Finder
+# Sunball Locator
 
-**Tracey's Sunball Finder** — Finding bright, comfortable weather windows for a warmer escape.
+**Sunball Locator** — Finding bright, comfortable weather windows for a warmer escape.
 
 A tool for New Englanders seeking optimal sun exposure during winter. Scans warm destinations for consecutive days of ideal weather, cross-referenced with nonstop flights from PVD/BOS.
 
@@ -15,7 +15,7 @@ A sunball window is a consecutive stretch of days with:
 - **Feels-like temperature in target range** (default: 72°F ±10°)
 - **3+ consecutive days** meeting both criteria
 
-This is a weather-planning heuristic for comfortable outdoor time. UVB light can contribute to vitamin D production in uncovered skin, while bright daytime light is a strong cue for the circadian clock. Actual vitamin D production varies by season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. Sunball Finder is not a medical device or a recommendation for a specific amount of sun exposure.
+This is a weather-planning heuristic for comfortable outdoor time. UVB light can contribute to vitamin D production in uncovered skin, while bright daytime light is a strong cue for the circadian clock. Actual vitamin D production varies by season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. Sunball Locator is not a medical device or a recommendation for a specific amount of sun exposure.
 
 ## Features
 
@@ -161,7 +161,7 @@ The repository also contains older `functions/api/hotels.js` and `functions/api/
 
 ## The daylight connection
 
-Sunball Finder is grounded in two established pieces of physiology, without trying to turn either into a treatment claim:
+Sunball Locator is grounded in two established pieces of physiology, without trying to turn either into a treatment claim:
 
 - UVB radiation from sunlight can trigger vitamin D synthesis in uncovered skin. The amount varies with season, latitude, cloud cover, skin pigmentation, age, clothing, and sunscreen. UV exposure also carries skin-cancer risk, so avoid burning and use appropriate protection. See the [NIH Office of Dietary Supplements vitamin D fact sheet](https://ods.od.nih.gov/factsheets/VitaminD-Consumer/).
 - Light and dark are the strongest environmental cues for circadian rhythms. Bright daytime light helps the body align its internal clock with the day-night cycle. See the [National Institute of General Medical Sciences circadian rhythms overview](https://www.nigms.nih.gov/education/fact-sheets/Pages/circadian-rhythms).

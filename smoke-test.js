@@ -19,7 +19,7 @@ async function get(path) {
 try {
   const page = await get('/');
   check('homepage responds', page.response.ok, `${page.response.status} ${page.response.url}`);
-  check('Sunball UI is present', page.text.includes('Tracey’s Sunball Locator') && page.text.includes('A little more light; a little less cold.'));
+  check('Sunball UI is present', page.text.includes('Sunball Locator') && page.text.includes('A little more light; a little less cold.'));
   check('scan controls are present', page.text.includes('id="scanBtn"') && page.text.includes('id="results"'));
   check('Google hotel map links are present', page.text.includes('googleMapsPlaceUrl') && page.text.includes('Show hotels in Maps'));
   check('Google destination links are present', page.text.includes('googleHotelsUrl') && page.text.includes('googleFlightsUrl') && page.text.includes('googleMapsPlaceUrl'));
