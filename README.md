@@ -44,6 +44,7 @@ Toggle airports on/off to filter which flights appear.
 - **Decriminalized**: USVI (STT, STX)
 - Filter: show all (have med card), prefer rec, or require rec only
 - Each destination includes a Google Maps search for nearby cannabis storefronts
+- Hotel options and dispensary searches are revealed only when requested
 - Retail access, possession limits, reciprocity, and visitor eligibility vary; verify current local rules before travel
 
 ### Hotel Preferences
@@ -55,6 +56,8 @@ Toggle airports on/off to filter which flights appear.
 ### Google destination links
 - Open a large Google Maps area view centered on each destination
 - Search nearby hotels and cannabis storefronts in Google Maps
+- Reveal the curated hotel names for a destination with **Check hotels**
+- Reveal a current Google Maps storefront search with **Check dispensaries**
 - Search Google Hotels for the selected city and dates
 - Search Google Flights after dated nonstop availability is verified
 

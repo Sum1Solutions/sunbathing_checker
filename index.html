@@ -544,6 +544,7 @@
         .cannabis-note { margin-top:14px; line-height:1.4; }
         .cannabis-note .cannabis-links { margin-top:9px; }
         .cannabis-note .cannabis-disclaimer { display:block; margin-top:8px; font-size:.72rem; color:var(--muted); }
+        .detail-panel { margin-top:12px; }
         .route-loading { color:var(--muted); font-size:.78rem; padding:8px 0; }
         .flights-section .google-actions, .hotels-section .google-actions { padding-top:12px; border-top:1px solid rgba(16,42,67,.08); }
         .flight-options, .hotel-chips { margin-top:4px; }
@@ -1406,6 +1407,14 @@
             return `https://www.google.com/maps/search/${encodeURIComponent(`cannabis dispensaries near ${dest.name}, ${dest.state}`)}/@${dest.lat},${dest.lon},11z`;
         }
 
+        function toggleDetails(id, button) {
+            const panel = document.getElementById(id);
+            if (!panel) return;
+            panel.hidden = !panel.hidden;
+            button.setAttribute('aria-expanded', String(!panel.hidden));
+            button.textContent = panel.hidden ? button.dataset.closedLabel : button.dataset.openLabel;
+        }
+
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
             const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
@@ -1430,8 +1439,8 @@
                     ? `Cannabis is decriminalized in ${dest.state}`
                     : `Medical cannabis information for ${dest.state}`;
             const cannabisNote = dest.cannabis === 'recreational'
-                ? `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Find cannabis storefronts in Maps</a></div><span class="cannabis-disclaimer">Retail locations, purchase rules, possession limits, and visitor eligibility can vary. Verify current local rules before traveling.</span></div>`
-                : `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Search cannabis storefronts in Maps</a></div><span class="cannabis-disclaimer">Map results are not a legal determination. Verify current local rules, medical-card reciprocity, and whether visitors may purchase.</span></div>`;
+                ? `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><button class="google-action check-cannabis-btn" type="button" aria-expanded="false" data-closed-label="🌿 Check dispensaries" data-open-label="🌿 Hide dispensary search" onclick="event.stopPropagation(); toggleDetails('cannabis-details-${code}', this)">🌿 Check dispensaries</button></div><div class="detail-panel" id="cannabis-details-${code}" hidden><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Find current storefronts in Maps</a><span class="cannabis-disclaimer">Retail locations, purchase rules, possession limits, and visitor eligibility can vary. Verify current local rules before traveling.</span></div></div>`
+                : `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><button class="google-action check-cannabis-btn" type="button" aria-expanded="false" data-closed-label="🌿 Check dispensaries" data-open-label="🌿 Hide dispensary search" onclick="event.stopPropagation(); toggleDetails('cannabis-details-${code}', this)">🌿 Check dispensaries</button></div><div class="detail-panel" id="cannabis-details-${code}" hidden><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Search current storefronts in Maps</a><span class="cannabis-disclaimer">Map results are not a legal determination. Verify current local rules, medical-card reciprocity, and whether visitors may purchase.</span></div></div>`;
 
             return `
                 <div class="sunball-card ${isPerfect ? 'perfect' : ''}" data-destination="${code}" onclick="this.classList.toggle('expanded')">
@@ -1483,6 +1492,8 @@
 
                     <div class="hotels-section">
                         <div class="section-title">🏨 Hotels</div>
+                        <button class="google-action check-hotels-btn" type="button" aria-expanded="false" data-closed-label="🏨 Check hotels" data-open-label="🏨 Hide hotel options" onclick="event.stopPropagation(); toggleDetails('hotel-details-${code}', this)">🏨 Check hotels</button>
+                        <div class="detail-panel" id="hotel-details-${code}" hidden>
                         <div class="hotel-chips">
                             ${hotels.slice(0, 4).map(h => `
                                 <a href="https://www.google.com/search?q=${encodeURIComponent(h.name + ' ' + dest.name + ' hotel')}"
@@ -1498,6 +1509,7 @@
                         <div class="google-actions">
                             <a class="google-action" href="${googleHotelsUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌂ Search Google Hotels</a>
                             <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Show hotels in Maps</a>
+                        </div>
                         </div>
                         ${cannabisNote}
                     </div>

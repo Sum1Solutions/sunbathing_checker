@@ -22,7 +22,8 @@ try {
   check('Sunball UI is present', page.text.includes('Tracey’s') && page.text.includes('Sunball Finder') && page.text.includes('A little more light; a little less cold.'));
   check('scan controls are present', page.text.includes('id="scanBtn"') && page.text.includes('id="results"'));
   check('Google hotel map links are present', page.text.includes('googleMapsPlaceUrl') && page.text.includes('Show hotels in Maps'));
-  check('cannabis map links are present', page.text.includes('googleCannabisUrl') && page.text.includes('cannabis storefronts in Maps'));
+  check('cannabis map links are present', page.text.includes('googleCannabisUrl') && page.text.includes('storefronts in Maps'));
+  check('hotel and dispensary checks are opt-in', page.text.includes('Check hotels') && page.text.includes('Check dispensaries') && page.text.includes('toggleDetails'));
   check('Google destination links are present', page.text.includes('googleHotelsUrl') && page.text.includes('googleFlightsUrl') && page.text.includes('googleMapsPlaceUrl'));
   check('flight checks are opt-in', page.text.includes('Check flights') && page.text.includes('checkFlights') && !page.text.includes('verifyAllRoutes('));
   check('current provider copy is present', page.text.includes('SerpApi') && !page.text.includes('Amadeus sandbox'));
