@@ -15,6 +15,16 @@ export async function onRequestPost(context) {
     const { origin, destination, departureDate, returnDate, adults = 1, nonStop = true } = await request.json();
     if (!env.SERPAPI_KEY) return reply({ success: false, code: 'provider_not_configured', error: 'SerpApi key is not configured' }, headers, 503);
 
+    // Cache successful route/date searches at Cloudflare's edge for one hour.
+    // The API key is deliberately excluded from the cache key.
+    const cacheKey = new Request(`${new URL(request.url).origin}/api/flights-cache/${encodeURIComponent(JSON.stringify({ origin, destination, departureDate, returnDate, adults, nonStop }))}`);
+    const cachedResponse = await caches.default.match(cacheKey);
+    if (cachedResponse) {
+      const cachedHeaders = new Headers(cachedResponse.headers);
+      cachedHeaders.set('X-Sunball-Cache', 'HIT');
+      return new Response(cachedResponse.body, { status: cachedResponse.status, headers: cachedHeaders });
+    }
+
     const url = new URL('https://serpapi.com/search');
     url.searchParams.set('engine', 'google_flights');
     url.searchParams.set('api_key', env.SERPAPI_KEY);
@@ -43,7 +53,9 @@ export async function onRequestPost(context) {
       .sort((a, b) => a.price - b.price)
       .slice(0, 10);
 
-    return reply({ success: true, flights, count: flights.length, cached: Boolean(data.search_metadata?.cached_page_link), source: 'SerpApi Google Flights', searchParams: { origin, destination, departureDate, returnDate, adults, nonStop } }, headers);
+    const result = reply({ success: true, flights, count: flights.length, cached: Boolean(data.search_metadata?.cached_page_link), source: 'SerpApi Google Flights', searchParams: { origin, destination, departureDate, returnDate, adults, nonStop } }, { ...headers, 'Cache-Control': 'public, max-age=3600', 'X-Sunball-Cache': 'MISS' });
+    await caches.default.put(cacheKey, result.clone());
+    return result;
   } catch (error) {
     return reply({ success: false, code: 'provider_error', error: error.message }, headers, 500);
   }
