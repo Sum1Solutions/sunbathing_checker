@@ -5,5 +5,4 @@ compatibility_date = "2024-01-01"
 pages_build_output_dir = "."
 
 # Runtime credentials belong in Cloudflare Pages Secrets, not source control:
-# wrangler pages secret put AMADEUS_CLIENT_ID
-# wrangler pages secret put AMADEUS_CLIENT_SECRET
+# wrangler pages secret put SERPAPI_KEY --project-name sunball-finder

@@ -650,7 +650,7 @@
                 <span style="display:block; margin-top:9px; font-size:.78rem;"><a href="https://ods.od.nih.gov/factsheets/VitaminD-Consumer/" target="_blank" rel="noopener">NIH vitamin D facts</a> · <a href="https://www.nigms.nih.gov/education/fact-sheets/Pages/circadian-rhythms" target="_blank" rel="noopener">NIH circadian rhythms</a></span>
             </div>
             <p>For birds heading toward brighter days 🦩</p>
-            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank" rel="noopener">NWS</a> | Flights and hotel averages: Amadeus sandbox when available</p>
+            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank" rel="noopener">NWS</a> | Flight availability: cached fare data when configured</p>
         </footer>
     </div>
 
@@ -1254,15 +1254,18 @@
                     score = calculateSunballScore(bestWindow, criteria);
                     status = `${bestWindow.length}-day window`;
                 } else {
-                    // Calculate partial score based on best available days
+                    // Do not assign a Sunball Score without a qualifying streak.
+                    // A separate status explains whether individual days looked promising.
                     const goodDays = weather.filter(d => {
                         const meetsTemp = d.feelsLike >= (criteria.targetTemp - criteria.tempRange) &&
                                          d.feelsLike <= (criteria.targetTemp + criteria.tempRange);
                         const meetsSun = d.sunshine >= criteria.minSunshine;
                         return meetsTemp || meetsSun;
                     });
-                    score = Math.min(40, goodDays.length * 8); // Partial score
-                    status = goodDays.length > 0 ? `${goodDays.length} good days (not consecutive)` : 'No matching days';
+                    score = 0;
+                    status = goodDays.length > 0
+                        ? `${goodDays.length} promising days, but not consecutive`
+                        : 'No matching days';
                 }
 
                 results.push({
@@ -1278,8 +1281,12 @@
                 });
             }
 
-            // Sort by score
-            results.sort((a, b) => b.score - a.score);
+            // Qualifying windows always outrank partial matches; score ranks the windows.
+            results.sort((a, b) => {
+                const aHasWindow = a.windows.length > 0 ? 1 : 0;
+                const bHasWindow = b.windows.length > 0 ? 1 : 0;
+                return bHasWindow - aHasWindow || b.score - a.score;
+            });
 
             statusBar.classList.remove('active');
             btn.disabled = false;
@@ -1303,6 +1310,10 @@
                     <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${results.length} places worth a look</h2></div>
                     <div style="color:var(--muted); font-size:.83rem;">Best match: <strong style="color:var(--ink);">${top.dest.name}</strong> · ${liveCount}/${results.length} live forecasts</div>
                 </div>
+                <details class="science-note" style="margin: 0 0 20px;">
+                    <summary style="cursor:pointer; color:var(--ink); font-weight:800;">How the Sunball Score works</summary>
+                    <p style="margin:10px 0 0;">Only a qualifying consecutive window receives a score from 0–100: up to 45 points for streak length, 35 for forecast sunshine, and 20 for temperature fit. A dash means there is no qualifying window; individual promising days are shown separately. Sunshine is estimated from forecast descriptions, so this is a travel-planning heuristic—not a UV or vitamin D measurement.</p>
+                </details>
                 <div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
             verifyAllRoutes(results);
         }
@@ -1314,6 +1325,7 @@
             await Promise.all(results.map(async result => {
                 const candidates = getRoutesFromAirports(result.dest, selectedAirports);
                 const liveRoutes = [];
+                let providerUnavailable = false;
                 await Promise.all(candidates.map(async route => {
                     try {
                         const response = await fetch('/api/flights', {
@@ -1321,24 +1333,37 @@
                             body: JSON.stringify({ origin: route.origin, destination: result.code, departureDate: dates.start, returnDate: dates.end, adults: 1, nonStop: true })
                         }).then(r => r.json());
                         const airlines = [...new Set((response.flights || []).map(flight => AIRLINE_NAMES[flight.carrier] || flight.carrier).filter(Boolean))];
-                        if (response.success && airlines.length) liveRoutes.push({ origin: route.origin, airlines });
+                        if (response.code === 'provider_not_configured') providerUnavailable = true;
+                        if (response.success && airlines.length) liveRoutes.push({ origin: route.origin, airlines, flights: response.flights || [] });
                     } catch (error) { /* keep this route unverified */ }
                 }));
                 const options = document.querySelector(`[data-route-options="${result.code}"]`);
-                if (options) options.outerHTML = renderVerifiedRoutes(liveRoutes, result.code);
+                if (options) options.outerHTML = renderVerifiedRoutes(liveRoutes, result.code, providerUnavailable);
                 const googleActions = document.querySelector(`[data-google-flights="${result.code}"]`);
-                if (googleActions) googleActions.outerHTML = renderGoogleFlightActions(liveRoutes, result.code);
+                if (googleActions) googleActions.outerHTML = renderGoogleFlightActions(liveRoutes, result.code, providerUnavailable);
             }));
         }
 
-        function renderVerifiedRoutes(routes, code) {
-            if (!routes.length) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">No verified nonstop offers found for these dates.</span></div>`;
-            return `<div class="flight-options" data-route-options="${code}">${routes.map(route => route.airlines.map(airline => `<a href="${AIRLINES[airline]?.url(route.origin, code) || googleFlightsUrl(route.origin, code)}" target="_blank" rel="noopener" class="flight-chip" onclick="event.stopPropagation()"><span class="origin">${route.origin}</span> → ${code}<span style="opacity:.8; margin-left:5px;">${airline} · verified nonstop</span></a>`).join('')).join('')}</div>`;
+        function renderVerifiedRoutes(routes, code, providerUnavailable = false) {
+            if (providerUnavailable) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">Flight search source needs setup.</span></div>`;
+            if (!routes.length) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">No cached nonstop fares found for these dates.</span></div>`;
+            return `<div class="flight-options" data-route-options="${code}">${routes.map(route => route.airlines.map(airline => {
+                const offer = route.flights.find(flight => flight.carrier === airline) || route.flights[0];
+                const detail = offer ? ` · from $${Math.round(offer.price)} · ${formatFlightTime(offer.departure?.time)}` : '';
+                return `<a href="${offer?.bookingUrl || AIRLINES[airline]?.url(route.origin, code) || googleFlightsUrl(route.origin, code)}" target="_blank" rel="noopener" class="flight-chip" onclick="event.stopPropagation()"><span class="origin">${route.origin}</span> → ${code}<span style="opacity:.8; margin-left:5px;">${airline} · verified nonstop${detail}</span></a>`;
+            }).join('')).join('')}</div>`;
         }
 
-        function renderGoogleFlightActions(routes, code) {
+        function renderGoogleFlightActions(routes, code, providerUnavailable = false) {
+            if (providerUnavailable) return `<div class="google-actions" data-google-flights="${code}"><span class="no-flights">Add a SerpApi key to check fares.</span></div>`;
             if (!routes.length) return `<div class="google-actions" data-google-flights="${code}"><span class="no-flights">No verified nonstop route found.</span></div>`;
             return `<div class="google-actions" data-google-flights="${code}">${routes.map(route => `<a class="google-action" href="${googleFlightsUrl(route.origin, code)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▣ Google Flights · ${route.origin}</a>`).join('')}</div>`;
+        }
+
+        function formatFlightTime(value) {
+            if (!value) return 'time unavailable';
+            const date = new Date(value.replace(' ', 'T'));
+            return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         }
         function googleHotelsUrl(dest) {
             const dates = getEscapeDates();
@@ -1359,13 +1384,13 @@
         }
 
         function googleMapsPlaceUrl(dest) {
-            return `https://www.google.com/maps/@?api=1&map_action=map&center=${dest.lat},${dest.lon}&zoom=11`;
+            return `https://www.google.com/maps/search/${encodeURIComponent(`hotels in ${dest.name}, ${dest.state}`)}/@${dest.lat},${dest.lon},11z`;
         }
 
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
-            const isPerfect = score >= 85;
             const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
+            const isPerfect = hasWindow && score >= 85;
 
             // Build hotel links
             let hotels = [];
@@ -1396,8 +1421,8 @@
                             </div>
                         </div>
                         <div class="sunball-score">
-                            <div class="score-value">${score}</div>
-                            <div class="score-label">sunball score</div>
+                            <div class="score-value">${hasWindow ? score : '—'}</div>
+                            <div class="score-label">${hasWindow ? 'sunball score' : 'no window'}</div>
                         </div>
                     </div>
 
@@ -1427,8 +1452,8 @@
 
                     <div class="flights-section">
                         <div class="section-title">✈️ Nonstop Flights</div>
-                        <div class="flight-options" data-route-options="${code}"><span class="route-loading">Checking live nonstop availability…</span></div>
-                        <div class="google-actions" data-google-flights="${code}"><span class="route-loading">Checking Google Flights routes…</span></div>
+                        <div class="flight-options" data-route-options="${code}"><span class="route-loading">Checking verified nonstop fares…</span></div>
+                        <div class="google-actions" data-google-flights="${code}"><span class="route-loading">Checking flight data…</span></div>
                     </div>
 
                     <div class="hotels-section">
@@ -1447,7 +1472,7 @@
                         </div>
                         <div class="google-actions">
                             <a class="google-action" href="${googleHotelsUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌂ Search Google Hotels</a>
-                            <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Open area in Maps</a>
+                            <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Show hotels in Maps</a>
                         </div>
                         ${cannabisNote}
                     </div>
@@ -1480,9 +1505,11 @@
         }
 
         function getNextWeekDate() {
-            const d = new Date();
-            d.setDate(d.getDate() + 7);
-            return d.toISOString().split('T')[0];
+            return document.getElementById('escapeStart')?.value || (() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 1);
+                return d.toISOString().split('T')[0];
+            })();
         }
 
         // Initialize

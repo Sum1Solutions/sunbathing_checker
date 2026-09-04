@@ -28,7 +28,7 @@ This is a weather-planning heuristic for comfortable outdoor time. UVB light can
 - Click any destination card to expand for full details
 
 ### Multi-Airline Flight Search
-Nonstop routes from PVD and BOS via:
+Verified dated nonstop results from PVD and BOS via SerpApi's Google Flights engine when configured:
 - **JetBlue** (Tracey flies free!)
 - **Southwest**
 - **Breeze**
@@ -49,11 +49,10 @@ Toggle airports on/off to filter which flights appear.
 - **Beach properties** for coastal sun exposure
 - Direct links to Google search and Marriott booking
 
-### Map view and Google links
-- Switch between ranked list and destination map views
-- Select a destination pin or place to highlight it
-- Open selected destinations in Google Maps, Google Hotels, or Google Flights
+### Google destination links
 - Open a large Google Maps area view centered on each destination
+- Search Google Hotels for the selected city and dates
+- Search Google Flights after live nonstop availability is verified
 
 ### Restaurant Recommendations
 - Curated restaurant picks for each destination
@@ -108,10 +107,10 @@ node smoke-test.js https://your-preview.pages.dev
 sunball-finder/
 ├── index.html              # Single-page app (client-side only)
 ├── wrangler.toml           # Cloudflare config
-└── functions/api/          # Legacy API functions (not used in v2)
+└── functions/api/          # Cloudflare Pages Functions for flight and hotel data
 ```
 
-**100% client-side** — No backend required. Weather data comes directly from the free NWS API. All flight, hotel, and restaurant links go directly to booking sites.
+Weather data comes directly from the free NWS API. Flight lookups run through the Cloudflare Pages Function so the SerpApi key stays server-side; hotel and restaurant links go directly to external sites.
 
 ## APIs & Cost
 
@@ -119,7 +118,7 @@ sunball-finder/
 |-----|---------|------|
 | **NWS Weather** | 7-day forecasts | Free (public API, no key) |
 
-NWS is a free public service. Amadeus and Google Maps credentials are stored as Cloudflare Pages Secrets; all other functionality uses direct links to external booking sites.
+NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Secret; all other functionality uses direct links to external booking sites.
 
 ## Security Considerations
 
