@@ -1,6 +1,6 @@
 # Sunball Finder
 
-**Tracey's Sunball Finder** — Finding perfect weather windows for Vitamin D & wellness recharge.
+**Tracey's Sunball Finder** — Finding bright, comfortable weather windows for a warmer escape.
 
 A tool for New Englanders seeking optimal sun exposure during winter. Scans warm destinations for consecutive days of ideal weather, cross-referenced with nonstop flights from PVD/BOS.
 
@@ -24,11 +24,12 @@ This is a weather-planning heuristic for comfortable outdoor time. UVB light can
 - "Feels like" temperature calculation (wind chill / heat index)
 - Sunshine percentage estimation from forecast descriptions
 - Consecutive day window detection
-- Sunball score ranking (0-100)
+- Sunball score ranking (0-100) for qualifying consecutive windows
+- Clear “No Sunball window” state when good days are not consecutive
 - Click any destination card to expand for full details
 
 ### Multi-Airline Flight Search
-Verified dated nonstop results from PVD and BOS via SerpApi's Google Flights engine when configured:
+Verified dated nonstop results from PVD and BOS via SerpApi's Google Flights engine when configured. Flight searches are opt-in: click **Check flights** on an individual destination so a weather scan does not spend flight-search credits.
 - **JetBlue** (Tracey flies free!)
 - **Southwest**
 - **Breeze**
@@ -52,7 +53,7 @@ Toggle airports on/off to filter which flights appear.
 ### Google destination links
 - Open a large Google Maps area view centered on each destination
 - Search Google Hotels for the selected city and dates
-- Search Google Flights after live nonstop availability is verified
+- Search Google Flights after dated nonstop availability is verified
 
 ### Restaurant Recommendations
 - Curated restaurant picks for each destination
@@ -99,6 +100,9 @@ node smoke-test.js
 
 # Test another environment
 node smoke-test.js https://your-preview.pages.dev
+
+# Configure the production flight-search secret (secure terminal prompt)
+wrangler pages secret put SERPAPI_KEY --project-name sunball-finder
 ```
 
 ## Architecture
@@ -112,13 +116,16 @@ sunball-finder/
 
 Weather data comes directly from the free NWS API. Flight lookups run through the Cloudflare Pages Function so the SerpApi key stays server-side; hotel and restaurant links go directly to external sites.
 
+The local `file:///.../index.html` file is useful for reviewing the static UI, but it cannot run the `/api/flights` Function. Use `wrangler pages dev .` for a local end-to-end test.
+
 ## APIs & Cost
 
 | API | Purpose | Cost |
 |-----|---------|------|
 | **NWS Weather** | 7-day forecasts | Free (public API, no key) |
+| **SerpApi Google Flights** | Opt-in dated nonstop fares and times | Free account tier; paid plans vary |
 
-NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Secret; all other functionality uses direct links to external booking sites.
+NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Secret; all other functionality uses direct links to external booking sites. SerpApi generally counts one successful search as one credit. The app caches an identical flight request at Cloudflare’s edge for one hour, so repeated checks for the same origin, destination, dates, passenger count, and nonstop setting avoid another provider request.
 
 ## Security Considerations
 
@@ -126,7 +133,7 @@ NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Se
 - No authentication required
 - No API keys exposed (NWS is keyless)
 - All external links open in new tabs
-- No cookies or tracking
+- No first-party cookies or tracking are used by the app; external sites may apply their own policies after a user opens a link
 - Cloudflare Pages provides DDoS protection and SSL
 
 ## Criteria Defaults
@@ -137,6 +144,20 @@ NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Se
 - **Consecutive days**: 3+
 - **Airports**: PVD + BOS (toggle to filter)
 - **Cannabis**: All destinations (assumes med card)
+
+## Flight provider notes
+
+SerpApi’s Google Flights engine is a third-party search service, not an official Google Flights API. Results are treated as observed search results, not a booking guarantee. A route can have no result for a particular date even when an airline operates it seasonally or on other days.
+
+The repository also contains older `functions/api/hotels.js` and `functions/api/skyscanner.js` handlers from earlier experiments. The current UI does not call those handlers; hotel discovery currently uses direct Google/Marriott links, and the active flight handler is `functions/api/flights.js`.
+
+## Production checklist
+
+- Open [the production site](https://sunball-finder.pages.dev), not the local `file:///` file, for live Functions.
+- Confirm `SERPAPI_KEY` is present as a Cloudflare Pages Secret.
+- Run `node smoke-test.js https://sunball-finder.pages.dev` after deployment.
+- Run a weather scan, then use **Check flights** on one destination only when needed.
+- Treat forecast sunshine as an estimate from NWS descriptions; the app does not measure UV or vitamin D production.
 
 ## The daylight connection
 

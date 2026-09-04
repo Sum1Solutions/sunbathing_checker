@@ -23,6 +23,8 @@ try {
   check('scan controls are present', page.text.includes('id="scanBtn"') && page.text.includes('id="results"'));
   check('Google hotel map links are present', page.text.includes('googleMapsPlaceUrl') && page.text.includes('Show hotels in Maps'));
   check('Google destination links are present', page.text.includes('googleHotelsUrl') && page.text.includes('googleFlightsUrl') && page.text.includes('googleMapsPlaceUrl'));
+  check('flight checks are opt-in', page.text.includes('Check flights') && page.text.includes('checkFlights') && !page.text.includes('verifyAllRoutes('));
+  check('current provider copy is present', page.text.includes('SerpApi') && !page.text.includes('Amadeus sandbox'));
 
 } catch (error) {
   check('site is reachable', false, error.message);
