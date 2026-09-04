@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunball Locator</title>
+    <title>Tracey’s Sunball Finder</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -541,6 +541,9 @@
         .google-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
         .google-action { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; text-decoration:none; font-size:.76rem; font-weight:800; }
         .check-flights-btn { cursor:pointer; font:inherit; }
+        .cannabis-note { margin-top:14px; line-height:1.4; }
+        .cannabis-note .cannabis-links { margin-top:9px; }
+        .cannabis-note .cannabis-disclaimer { display:block; margin-top:8px; font-size:.72rem; color:var(--muted); }
         .route-loading { color:var(--muted); font-size:.78rem; padding:8px 0; }
         .flights-section .google-actions, .hotels-section .google-actions { padding-top:12px; border-top:1px solid rgba(16,42,67,.08); }
         .flight-options, .hotel-chips { margin-top:4px; }
@@ -551,6 +554,8 @@
         .science-note strong { color:var(--ink); }
         .panel-intro { margin:-8px 0 20px; color:var(--muted); font-size:.9rem; line-height:1.45; max-width:680px; }
         .score-explainer { margin-top:5px; color:#d7e6f4; font-size:.68rem; line-height:1.2; max-width:112px; }
+        .title-owner { color:var(--coral); }
+        .title-product { color:var(--ink); }
         @media (max-width: 640px) {
             body { padding: 0 14px 25px; }
             header { padding: 34px 0 25px; }
@@ -566,7 +571,7 @@
     <div class="container">
         <header>
             <div class="flamingo-mark"><span class="bird" aria-hidden="true">🦩</span> follow the light</div>
-            <h1>Sunball Locator</h1>
+            <h1><span class="title-owner">Tracey’s</span> <span class="title-product">Sunball Finder</span></h1>
             <p class="subtitle">A little more light; a little less cold.</p>
         </header>
 
@@ -1397,6 +1402,10 @@
             return `https://www.google.com/maps/search/${encodeURIComponent(`hotels in ${dest.name}, ${dest.state}`)}/@${dest.lat},${dest.lon},11z`;
         }
 
+        function googleCannabisUrl(dest) {
+            return `https://www.google.com/maps/search/${encodeURIComponent(`cannabis dispensaries near ${dest.name}, ${dest.state}`)}/@${dest.lat},${dest.lon},11z`;
+        }
+
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
             const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
@@ -1415,9 +1424,14 @@
             }
 
             // Cannabis status
+            const cannabisStatus = dest.cannabis === 'recreational'
+                ? `Recreational cannabis reported in ${dest.state}`
+                : dest.cannabis === 'decriminalized'
+                    ? `Cannabis is decriminalized in ${dest.state}`
+                    : `Medical cannabis information for ${dest.state}`;
             const cannabisNote = dest.cannabis === 'recreational'
-                ? `<div class="cannabis-note">✓ Recreational cannabis legal in ${dest.state}</div>`
-                : `<div class="cannabis-note">✓ Medical cannabis available in ${dest.state}</div>`;
+                ? `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Find cannabis storefronts in Maps</a></div><span class="cannabis-disclaimer">Retail locations, purchase rules, possession limits, and visitor eligibility can vary. Verify current local rules before traveling.</span></div>`
+                : `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Search cannabis storefronts in Maps</a></div><span class="cannabis-disclaimer">Map results are not a legal determination. Verify current local rules, medical-card reciprocity, and whether visitors may purchase.</span></div>`;
 
             return `
                 <div class="sunball-card ${isPerfect ? 'perfect' : ''}" data-destination="${code}" onclick="this.classList.toggle('expanded')">
