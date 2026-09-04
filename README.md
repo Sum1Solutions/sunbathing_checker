@@ -26,6 +26,7 @@ This is a weather-planning heuristic for comfortable outdoor time. UVB light can
 - Consecutive day window detection
 - Sunball score ranking (0-100) for qualifying consecutive windows
 - Clear “No Sunball window” state when good days are not consecutive
+- Clearly labeled broadened suggestions when no destination meets the exact settings; the app relaxes one criterion at a time, then combinations, and offers a strict-only rerun
 - Click any destination card to expand for full details
 
 ### Multi-Airline Flight Search
@@ -156,6 +157,10 @@ NWS is a free public service. The SerpApi key is stored as a Cloudflare Pages Se
 SerpApi’s Google Flights engine is a third-party search service, not an official Google Flights API. Results are treated as observed search results, not a booking guarantee. A route can have no result for a particular date even when an airline operates it seasonally or on other days.
 
 The repository also contains older `functions/api/hotels.js` and `functions/api/skyscanner.js` handlers from earlier experiments. The current UI does not call those handlers; hotel discovery currently uses direct Google/Marriott links, and the active flight handler is `functions/api/flights.js`.
+
+## Matching behavior
+
+The scan always evaluates the selected settings first. If there are no exact windows, it tries the smallest useful relaxation without making another flight-provider request: one fewer consecutive day, 10 percentage points less sunshine, or a 5°F wider temperature range, followed by combinations when needed. Any relaxed result is labeled as broadened, explains the exact change, and includes a **Show strict-only results** control. No result is presented as an exact match when it is not one.
 
 ## Production checklist
 

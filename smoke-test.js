@@ -26,6 +26,7 @@ try {
   check('hotel and dispensary checks are opt-in', page.text.includes('Check hotels') && page.text.includes('Check dispensaries') && page.text.includes('toggleDetails'));
   check('Google destination links are present', page.text.includes('googleHotelsUrl') && page.text.includes('googleFlightsUrl') && page.text.includes('googleMapsPlaceUrl'));
   check('flight checks are opt-in', page.text.includes('Check flights') && page.text.includes('checkFlights') && !page.text.includes('verifyAllRoutes('));
+  check('strict and broadened matching are explained', page.text.includes('applyRelaxedSearch') && page.text.includes('No exact Sunball windows') && page.text.includes('Show strict-only results'));
   check('current provider copy is present', page.text.includes('SerpApi') && !page.text.includes('Amadeus sandbox'));
 
 } catch (error) {

@@ -553,6 +553,9 @@
         footer a { color: var(--coral-dark); }
         .science-note { max-width: 760px; margin: 0 auto 22px; padding: 18px 20px; text-align:left; background:#fff7fb; border:1px solid rgba(255,79,163,.18); border-radius:16px; color:var(--muted); line-height:1.55; }
         .science-note strong { color:var(--ink); }
+        .relaxation-banner { margin:0 0 20px; padding:18px 20px; background:#fff0f6; border:1px solid rgba(255,79,163,.35); border-radius:16px; color:var(--ink); line-height:1.45; }
+        .relaxation-banner strong { color:var(--coral-dark); }
+        .relaxation-banner p { margin:5px 0 12px; color:var(--muted); }
         .panel-intro { margin:-8px 0 20px; color:var(--muted); font-size:.9rem; line-height:1.45; max-width:680px; }
         .score-explainer { margin-top:5px; color:#d7e6f4; font-size:.68rem; line-height:1.2; max-width:112px; }
         .title-owner { color:var(--coral); }
@@ -1205,8 +1208,50 @@
             return Math.round(Math.min(100, score));
         }
 
+        function getRelaxationAttempts(criteria) {
+            const attempts = [];
+            const addAttempt = (key, attemptCriteria, label) => {
+                const signature = JSON.stringify(attemptCriteria);
+                if (signature !== JSON.stringify(criteria) && !attempts.some(attempt => attempt.signature === signature)) {
+                    attempts.push({ key, criteria: attemptCriteria, label, signature });
+                }
+            };
+            const fewerDays = Math.max(2, criteria.minDays - 1);
+            const lessSun = Math.max(50, criteria.minSunshine - 10);
+            const widerTemp = Math.min(15, criteria.tempRange + 5);
+            if (fewerDays !== criteria.minDays) addAttempt('days', { ...criteria, minDays: fewerDays }, `minimum streak from ${criteria.minDays}+ to ${fewerDays}+ days`);
+            if (lessSun !== criteria.minSunshine) addAttempt('sunshine', { ...criteria, minSunshine: lessSun }, `minimum sunshine from ${criteria.minSunshine}%+ to ${lessSun}%+`);
+            if (widerTemp !== criteria.tempRange) addAttempt('temperature', { ...criteria, tempRange: widerTemp }, `temperature range from ±${criteria.tempRange}°F to ±${widerTemp}°F`);
+            if (fewerDays !== criteria.minDays && lessSun !== criteria.minSunshine) addAttempt('days-sunshine', { ...criteria, minDays: fewerDays, minSunshine: lessSun }, `minimum streak to ${fewerDays}+ days and sunshine to ${lessSun}%+`);
+            if (fewerDays !== criteria.minDays && widerTemp !== criteria.tempRange) addAttempt('days-temperature', { ...criteria, minDays: fewerDays, tempRange: widerTemp }, `minimum streak to ${fewerDays}+ days and temperature range to ±${widerTemp}°F`);
+            if (lessSun !== criteria.minSunshine && widerTemp !== criteria.tempRange) addAttempt('sunshine-temperature', { ...criteria, minSunshine: lessSun, tempRange: widerTemp }, `sunshine to ${lessSun}%+ and temperature range to ±${widerTemp}°F`);
+            if (fewerDays !== criteria.minDays && lessSun !== criteria.minSunshine && widerTemp !== criteria.tempRange) addAttempt('all', { ...criteria, minDays: fewerDays, minSunshine: lessSun, tempRange: widerTemp }, `minimum streak to ${fewerDays}+ days, sunshine to ${lessSun}%+, and temperature range to ±${widerTemp}°F`);
+            return attempts;
+        }
+
+        function applyRelaxedSearch(results, criteria) {
+            for (const attempt of getRelaxationAttempts(criteria)) {
+                const relaxedWindows = results.map(result => findSunballWindows(result.weather, attempt.criteria));
+                if (!relaxedWindows.some(windows => windows.length > 0)) continue;
+
+                results.forEach((result, index) => {
+                    result.windows = relaxedWindows[index];
+                    result.matchCriteria = attempt.criteria;
+                    result.relaxed = result.windows.length > 0;
+                    result.relaxationLabel = attempt.label;
+                    result.bestWindow = result.windows.length
+                        ? result.windows.reduce((best, window) => calculateSunballScore(window, attempt.criteria) > calculateSunballScore(best, attempt.criteria) ? window : best, result.windows[0])
+                        : [];
+                    result.score = result.bestWindow.length ? calculateSunballScore(result.bestWindow, attempt.criteria) : 0;
+                    if (result.bestWindow.length) result.status = `${result.bestWindow.length}-day window under broadened settings`;
+                });
+                return attempt;
+            }
+            return null;
+        }
+
         // Main scan function
-        async function scanForSunballs() {
+        async function scanForSunballs(options = {}) {
             const btn = document.getElementById('scanBtn');
             const statusBar = document.getElementById('statusBar');
             const statusText = document.getElementById('statusText');
@@ -1287,6 +1332,9 @@
                     weather,
                     weatherSource: weatherResult.source,
                     windows,
+                    strictWindows: windows,
+                    matchCriteria: criteria,
+                    relaxed: false,
                     bestWindow,
                     score,
                     routes: getRoutesFromAirports(dest, selectedAirports),
@@ -1294,18 +1342,24 @@
                 });
             }
 
+            const strictMatchCount = results.filter(result => result.strictWindows.length > 0).length;
+            const relaxation = strictMatchCount === 0 && options.allowRelaxedFallback !== false
+                ? applyRelaxedSearch(results, criteria)
+                : null;
+            const displayResults = relaxation ? results.filter(result => result.windows.length > 0) : results;
+
             // Qualifying windows always outrank partial matches; score ranks the windows.
-            results.sort((a, b) => {
+            displayResults.sort((a, b) => {
                 const aHasWindow = a.windows.length > 0 ? 1 : 0;
                 const bHasWindow = b.windows.length > 0 ? 1 : 0;
                 return bHasWindow - aHasWindow || b.score - a.score;
             });
-            scannedResults = new Map(results.map(result => [result.code, result]));
+            scannedResults = new Map(displayResults.map(result => [result.code, result]));
 
             statusBar.classList.remove('active');
             btn.disabled = false;
 
-            if (results.length === 0) {
+            if (displayResults.length === 0) {
                 resultsDiv.innerHTML = `
                     <div class="no-results">
                         <h3>🦩 No Destinations Available</h3>
@@ -1316,19 +1370,26 @@
             }
 
             // Render results
-            const top = results[0];
-            const liveCount = results.filter(r => r.weatherSource === 'live').length;
+            const top = displayResults[0];
+            const liveCount = displayResults.filter(r => r.weatherSource === 'live').length;
+            const noStrictMatch = strictMatchCount === 0;
+            const resultBanner = relaxation
+                ? `<div class="relaxation-banner"><strong>No exact Sunball windows matched your settings.</strong><p>We broadened the search automatically by ${relaxation.label}. The results below are possibilities under those broadened settings—not strict matches.</p><button class="google-action" type="button" onclick="scanForSunballs({allowRelaxedFallback:false})">Show strict-only results</button> <span style="font-size:.78rem; color:var(--muted);">or adjust the controls above and scan again.</span></div>`
+                : noStrictMatch
+                    ? `<div class="relaxation-banner"><strong>No Sunball windows matched these settings.</strong><p>Try lowering the sunshine threshold, allowing fewer consecutive days, or widening the temperature range above.</p></div>`
+                : '';
             resultsDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin: 10px 0 18px; flex-wrap:wrap;">
                     <div><div style="color:var(--coral-dark); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase;">Your sunny shortlist</div>
-                    <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${results.length} places worth a look</h2></div>
-                    <div style="color:var(--muted); font-size:.83rem;">Best match: <strong style="color:var(--ink);">${top.dest.name}</strong> · ${results.filter(r => r.windows.length > 0).length} qualifying windows · ${liveCount}/${results.length} live forecasts</div>
+                    <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${relaxation ? `${displayResults.length} broadened possibilities` : `${displayResults.length} places worth a look`}</h2></div>
+                    <div style="color:var(--muted); font-size:.83rem;">${noStrictMatch ? 'No strict best match' : `Best match: <strong style="color:var(--ink);">${top.dest.name}</strong>`} · ${displayResults.filter(r => r.windows.length > 0).length} qualifying windows · ${liveCount}/${displayResults.length} live forecasts</div>
                 </div>
+                ${resultBanner}
                 <details class="science-note" style="margin: 0 0 20px;">
                     <summary style="cursor:pointer; color:var(--ink); font-weight:800;">How the Sunball Score works</summary>
                     <p style="margin:10px 0 0;">Only a qualifying consecutive window receives a score from 0–100: up to 45 points for streak length, 35 for forecast sunshine, and 20 for temperature fit. A dash means there is no qualifying window; individual promising days are shown separately. Sunshine is estimated from forecast descriptions, so this is a travel-planning heuristic—not a UV or vitamin D measurement.</p>
                 </details>
-                <div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
+                <div class="sunball-grid">${displayResults.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
         }
 
         const AIRLINE_NAMES = { B6: 'JetBlue', WN: 'Southwest', MX: 'Breeze', NK: 'Spirit', F9: 'Frontier' };
@@ -1417,7 +1478,8 @@
 
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
-            const hasWindow = bestWindow && bestWindow.length >= criteria.minDays;
+            const matchCriteria = result.matchCriteria || criteria;
+            const hasWindow = bestWindow && bestWindow.length >= matchCriteria.minDays;
             const isPerfect = hasWindow && score >= 85;
 
             // Build hotel links
@@ -1455,22 +1517,22 @@
                         </div>
                         <div class="sunball-score">
                             <div class="score-value ${hasWindow ? '' : 'no-window'}">${hasWindow ? score : '—'}</div>
-                            <div class="score-label">${hasWindow ? 'sunball score' : 'no window'}</div>
-                            ${hasWindow ? '' : '<div class="score-explainer">Needs 3+ consecutive qualifying days</div>'}
+                            <div class="score-label">${hasWindow ? (result.relaxed ? 'broadened score' : 'sunball score') : 'no window'}</div>
+                            ${hasWindow ? '' : `<div class="score-explainer">Needs ${matchCriteria.minDays}+ consecutive qualifying days</div>`}
                         </div>
                     </div>
 
                     <div class="weather-window">
                         <div class="window-title">
-                            ${hasWindow ? `🦩 ${bestWindow.length}-Day Sunball Window` : `☀️ ${status || 'Checking conditions...'}`}
+                            ${hasWindow ? `🦩 ${bestWindow.length}-Day ${result.relaxed ? 'Broadened ' : ''}Sunball Window` : `☀️ ${status || 'Checking conditions...'}`}
                             <span style="margin-left:auto; font-size:.62rem; color:var(--muted); font-weight:600;">${weatherSource === 'live' ? 'LIVE NWS' : 'ESTIMATE'}</span>
                         </div>
                         <div class="weather-days">
                             ${weather ? weather.slice(0, 7).map(day => {
                                 const inWindow = bestWindow && bestWindow.some(w => w.name === day.name);
-                                const meetsTemp = day.feelsLike >= (criteria.targetTemp - criteria.tempRange) &&
-                                                  day.feelsLike <= (criteria.targetTemp + criteria.tempRange);
-                                const meetsSun = day.sunshine >= criteria.minSunshine;
+                                const meetsTemp = day.feelsLike >= (matchCriteria.targetTemp - matchCriteria.tempRange) &&
+                                                  day.feelsLike <= (matchCriteria.targetTemp + matchCriteria.tempRange);
+                                const meetsSun = day.sunshine >= matchCriteria.minSunshine;
                                 return `
                                     <div class="weather-day ${inWindow ? 'perfect' : ''}">
                                         <div class="day-name">${day.name.split(' ')[0].substring(0, 3)}</div>
