@@ -538,6 +538,7 @@
         .flamingo-mark .bird { display:inline-grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#ffe0f0; font-size:1.7rem; box-shadow:0 5px 14px rgba(255,79,163,.18); }
         .google-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
         .google-action { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; text-decoration:none; font-size:.76rem; font-weight:800; }
+        .check-flights-btn { cursor:pointer; font:inherit; }
         .route-loading { color:var(--muted); font-size:.78rem; padding:8px 0; }
         .flights-section .google-actions, .hotels-section .google-actions { padding-top:12px; border-top:1px solid rgba(16,42,67,.08); }
         .flight-options, .hotel-chips { margin-top:4px; }
@@ -995,6 +996,7 @@
 
         // UI State
         let selectedAirports = new Set(['PVD', 'BOS']);
+        let scannedResults = new Map();
 
         // Toggle airport selection
         document.querySelectorAll('.toggle-btn').forEach(btn => {
@@ -1287,6 +1289,7 @@
                 const bHasWindow = b.windows.length > 0 ? 1 : 0;
                 return bHasWindow - aHasWindow || b.score - a.score;
             });
+            scannedResults = new Map(results.map(result => [result.code, result]));
 
             statusBar.classList.remove('active');
             btn.disabled = false;
@@ -1315,38 +1318,40 @@
                     <p style="margin:10px 0 0;">Only a qualifying consecutive window receives a score from 0–100: up to 45 points for streak length, 35 for forecast sunshine, and 20 for temperature fit. A dash means there is no qualifying window; individual promising days are shown separately. Sunshine is estimated from forecast descriptions, so this is a travel-planning heuristic—not a UV or vitamin D measurement.</p>
                 </details>
                 <div class="sunball-grid">${results.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
-            verifyAllRoutes(results);
         }
 
         const AIRLINE_NAMES = { B6: 'JetBlue', WN: 'Southwest', MX: 'Breeze', NK: 'Spirit', F9: 'Frontier' };
 
-        async function verifyAllRoutes(results) {
+        async function checkFlights(code) {
+            const result = scannedResults.get(code);
+            if (!result) return;
             const dates = getEscapeDates();
-            await Promise.all(results.map(async result => {
-                const candidates = getRoutesFromAirports(result.dest, selectedAirports);
-                const liveRoutes = [];
-                let providerUnavailable = false;
-                await Promise.all(candidates.map(async route => {
-                    try {
-                        const response = await fetch('/api/flights', {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ origin: route.origin, destination: result.code, departureDate: dates.start, returnDate: dates.end, adults: 1, nonStop: true })
-                        }).then(r => r.json());
-                        const airlines = [...new Set((response.flights || []).map(flight => AIRLINE_NAMES[flight.carrier] || flight.carrier).filter(Boolean))];
-                        if (response.code === 'provider_not_configured') providerUnavailable = true;
-                        if (response.success && airlines.length) liveRoutes.push({ origin: route.origin, airlines, flights: response.flights || [] });
-                    } catch (error) { /* keep this route unverified */ }
-                }));
-                const options = document.querySelector(`[data-route-options="${result.code}"]`);
-                if (options) options.outerHTML = renderVerifiedRoutes(liveRoutes, result.code, providerUnavailable);
-                const googleActions = document.querySelector(`[data-google-flights="${result.code}"]`);
-                if (googleActions) googleActions.outerHTML = renderGoogleFlightActions(liveRoutes, result.code, providerUnavailable);
+            const options = document.querySelector(`[data-route-options="${code}"]`);
+            const button = options?.querySelector('.check-flights-btn');
+            if (button) { button.disabled = true; button.textContent = 'Checking flights…'; }
+            const candidates = getRoutesFromAirports(result.dest, selectedAirports);
+            const liveRoutes = [];
+            let providerUnavailable = false;
+            await Promise.all(candidates.map(async route => {
+                try {
+                    const response = await fetch('/api/flights', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ origin: route.origin, destination: code, departureDate: dates.start, returnDate: dates.end, adults: 1, nonStop: true })
+                    }).then(r => r.json());
+                    const airlines = [...new Set((response.flights || []).map(flight => AIRLINE_NAMES[flight.carrier] || flight.carrier).filter(Boolean))];
+                    if (response.code === 'provider_not_configured') providerUnavailable = true;
+                    if (response.success && airlines.length) liveRoutes.push({ origin: route.origin, airlines, flights: response.flights || [] });
+                } catch (error) { /* keep this route unverified */ }
             }));
+            const refreshedOptions = document.querySelector(`[data-route-options="${code}"]`);
+            if (refreshedOptions) refreshedOptions.outerHTML = renderVerifiedRoutes(liveRoutes, code, providerUnavailable);
+            const googleActions = document.querySelector(`[data-google-flights="${code}"]`);
+            if (googleActions) googleActions.outerHTML = renderGoogleFlightActions(liveRoutes, code, providerUnavailable);
         }
 
         function renderVerifiedRoutes(routes, code, providerUnavailable = false) {
             if (providerUnavailable) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">Flight search source needs setup.</span></div>`;
-            if (!routes.length) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">No cached nonstop fares found for these dates.</span></div>`;
+            if (!routes.length) return `<div class="flight-options" data-route-options="${code}"><span class="no-flights">No verified nonstop flights found for these dates.</span></div>`;
             return `<div class="flight-options" data-route-options="${code}">${routes.map(route => route.airlines.map(airline => {
                 const offer = route.flights.find(flight => flight.carrier === airline) || route.flights[0];
                 const detail = offer ? ` · from $${Math.round(offer.price)} · ${formatFlightTime(offer.departure?.time)}` : '';
@@ -1452,8 +1457,8 @@
 
                     <div class="flights-section">
                         <div class="section-title">✈️ Nonstop Flights</div>
-                        <div class="flight-options" data-route-options="${code}"><span class="route-loading">Checking verified nonstop fares…</span></div>
-                        <div class="google-actions" data-google-flights="${code}"><span class="route-loading">Checking flight data…</span></div>
+                        <div class="flight-options" data-route-options="${code}"><button class="google-action check-flights-btn" type="button" onclick="event.stopPropagation(); checkFlights('${code}')">✈ Check flights</button></div>
+                        <div class="google-actions" data-google-flights="${code}" hidden></div>
                     </div>
 
                     <div class="hotels-section">
