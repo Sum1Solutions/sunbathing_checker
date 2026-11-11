@@ -529,15 +529,30 @@
         .day-name, .day-feels { color: var(--muted); }
         .day-temp { color: var(--ink); }
         .day-conditions { min-height: 2.25em; line-height: 1.15; }
-        .flights-section, .hotels-section, .restaurants-section { border-color: var(--line) !important; }
+        .flights-section, .hotels-section, .restaurants-section, .cams-section { border-color: var(--line) !important; }
+        .cams-section { padding: 20px; border-top: 1px solid var(--line); }
+        .cam-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
+        .cam-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; transition: border-color .2s, background .2s; }
+        .cam-card.active-cam { border-color: var(--coral); background: #fff7fb; }
+        .cam-card-title { font-size: .84rem; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+        .cam-zone { font-size: .72rem; color: var(--muted); margin: 4px 0 9px; line-height: 1.35; }
+        .cam-preview-box { margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #f2eee5; }
+        .cam-preview-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 12px; font-size: .74rem; color: var(--ink); background: #fffdf8; border-bottom: 1px solid var(--line); }
+        .cam-live-iframe { width: 100%; height: 240px; border: 0; display: block; background: #e8f0ef; }
+        .cam-backup-note { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #f2eee5; font-size: .74rem; color: var(--muted); line-height: 1.45; }
+        .hotel-selector-wrap { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(16,42,67,.08); }
+        .hotel-selector-label { font-size: .74rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 5px; }
+        .hotel-selector { width: 100%; max-width: 380px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: .84rem; color: var(--ink); }
+        .season-box { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #fff7fb; border: 1px solid rgba(255,79,163,.22); font-size: .78rem; line-height: 1.45; }
+        .season-box strong { color: var(--coral-dark); }
         .section-title { color: var(--muted); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: .72rem; }
         .flight-chip { color: var(--ink); border-color: rgba(16,42,67,.14) !important; background: #e8f0ef !important; }
         .flight-chip:hover { background: #d5e7e2 !important; }
         .hotel-chip { color: var(--ink); background: #fff !important; border-color: var(--line) !important; }
         .hotel-chip:hover { border-color: var(--coral) !important; background: #fff0f6 !important; }
         .cannabis-note { background: #e8f4ed; color: #287557; border-color: #53a984; }
-        .flamingo-mark { display:inline-flex; align-items:center; gap:8px; color:var(--coral-dark); font-size:.76rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px; }
-        .flamingo-mark .bird { display:inline-grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#ffe0f0; font-size:1.7rem; box-shadow:0 5px 14px rgba(255,79,163,.18); }
+        .flamingo-mark { display:inline-flex; align-items:center; gap:10px; color:var(--coral-dark); font-size:.76rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px; }
+        .flamingo-mark .bird { display:inline-grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#ffe0f0; font-size:2.35rem; box-shadow:0 7px 18px rgba(255,79,163,.22); }
         .google-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
         .google-action { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; text-decoration:none; font-size:.76rem; font-weight:800; }
         .check-flights-btn { cursor:pointer; font:inherit; }
@@ -574,7 +589,7 @@
 <body>
     <div class="container">
         <header>
-            <div class="flamingo-mark"><span class="bird" aria-hidden="true">🦩</span> follow the light</div>
+            <div class="flamingo-mark"><span class="bird" role="img" aria-label="Flamingo">🦩</span> follow the light</div>
             <h1><span class="title-owner">Tracey’s</span> <span class="title-product">Sunball Finder</span></h1>
             <p class="subtitle">A little more light; a little less cold.</p>
         </header>
@@ -665,7 +680,7 @@
                 <span style="display:block; margin-top:9px; font-size:.78rem;"><a href="https://ods.od.nih.gov/factsheets/VitaminD-Consumer/" target="_blank" rel="noopener">NIH vitamin D facts</a> · <a href="https://www.nigms.nih.gov/education/fact-sheets/Pages/circadian-rhythms" target="_blank" rel="noopener">NIH circadian rhythms</a></span>
             </div>
             <p>For birds heading toward brighter days 🦩</p>
-            <p style="margin-top: 10px;">Weather: <a href="https://weather.gov" target="_blank" rel="noopener">NWS</a> | Flight availability: cached fare data when configured</p>
+            <p style="margin-top: 10px;">Weather: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> &amp; <a href="https://weather.gov" target="_blank" rel="noopener">NWS</a> | Flight availability: cached fare data when configured</p>
         </footer>
     </div>
 
@@ -717,7 +732,7 @@
                     BOS: ['JetBlue', 'Southwest', 'Spirit']
                 },
                 hotels: {
-                    marriott: ['The Cosmopolitan', 'Vdara', 'Delano Las Vegas'],
+                    marriott: ['The Cosmopolitan', 'Vdara', 'Delano Las Vegas', 'Mandalay Bay'],
                     noble: [],
                     beach: []
                 },
@@ -834,7 +849,7 @@
                 hotels: {
                     marriott: ['JW Marriott Marco Island', 'The Ritz-Carlton Naples'],
                     noble: [],
-                    beach: ['LaPlaya Beach & Golf Resort', 'Naples Grande Beach Resort']
+                    beach: ['Naples Grande Beach Resort', 'Hotel Capri Inn', 'LaPlaya Beach & Golf Resort']
                 },
                 restaurants: ['The Bay House', 'USS Nemo', 'Barbatella', 'Sea Salt']
             },
@@ -944,7 +959,7 @@
                     BOS: ['JetBlue', 'Southwest', 'Spirit']
                 },
                 hotels: {
-                    marriott: ['JW Marriott Austin', 'W Austin'],
+                    marriott: ['JW Marriott Austin', 'W Austin', 'The LINE Austin'],
                     noble: [],
                     beach: []
                 },
@@ -1070,8 +1085,123 @@
             return '☁️';
         }
 
+        const clampNum = n => Math.max(0, Math.min(1, n));
+        function calculateHourScore(temp, cloud, wind, rain) {
+            if (![temp, cloud, wind, rain].every(v => typeof v === 'number' && Number.isFinite(v))) return null;
+            const warmth = clampNum(1 - Math.abs(temp - 79) / 24);
+            const sun = clampNum(1 - cloud / 100);
+            const breeze = clampNum(1 - Math.max(0, wind - 5) / 18);
+            const dry = clampNum(1 - rain / 70);
+            return Math.round(100 * (.45 * warmth + .35 * sun + .20 * breeze) * (.4 + .6 * dry) * (.4 + .6 * sun) * (.6 + .4 * warmth));
+        }
+
+        function processOpenMeteoHourly(data) {
+            const h = data.hourly;
+            if (!h?.time) return null;
+            const byDate = new Map();
+            h.time.forEach((time, i) => {
+                const hour = Number(time.slice(11, 13));
+                if (hour < 11 || hour > 16) return;
+                const temp = h.apparent_temperature?.[i];
+                const cloud = h.cloud_cover?.[i];
+                const wind = h.wind_speed_10m?.[i];
+                const rain = h.precipitation_probability?.[i];
+                const score = calculateHourScore(temp, cloud, wind, rain);
+                if (score === null) return;
+                const date = time.slice(0, 10);
+                const arr = byDate.get(date) || [];
+                arr.push({ score, temp, cloud, wind, rain });
+                byDate.set(date, arr);
+            });
+            const days = [];
+            for (const [date, list] of byDate) {
+                if (list.length < 4) continue;
+                const avg = k => list.reduce((s, x) => s + x[k], 0) / list.length;
+                const avgScore = Math.round(avg('score'));
+                const avgTemp = Math.round(avg('temp'));
+                const avgCloud = Math.round(avg('cloud'));
+                const avgWind = Math.round(avg('wind'));
+                const avgRain = Math.round(avg('rain'));
+                const sunshine = Math.round(100 - avgCloud);
+                const conditions = avgRain >= 40 ? 'Passing rain' : avgCloud <= 20 ? 'Sunny & clear' : avgCloud <= 45 ? 'Mostly sunny' : avgCloud <= 75 ? 'Partly cloudy' : 'Cloudy';
+                const dObj = new Date(`${date}T12:00:00`);
+                days.push({
+                    name: dObj.toLocaleDateString('en-US', { weekday: 'long' }),
+                    date,
+                    temp: avgTemp,
+                    feelsLike: avgTemp,
+                    nightTemp: avgTemp - 12,
+                    conditions,
+                    wind: `${avgWind} mph`,
+                    sunshine,
+                    cloud: avgCloud,
+                    rain: avgRain,
+                    hourScore: avgScore
+                });
+            }
+            return days.length ? days : null;
+        }
+
+        async function fetchSeasonalContext(dest) {
+            const year = new Date().getFullYear() - 1;
+            const u = new URL('https://archive-api.open-meteo.com/v1/archive');
+            Object.entries({
+                latitude: dest.lat,
+                longitude: dest.lon,
+                start_date: `${year - 2}-01-01`,
+                end_date: `${year}-12-31`,
+                hourly: 'apparent_temperature,cloud_cover,wind_speed_10m,precipitation',
+                temperature_unit: 'fahrenheit',
+                wind_speed_unit: 'mph',
+                timezone: 'auto'
+            }).forEach(([k, v]) => u.searchParams.set(k, v));
+            const r = await fetch(u.href, { signal: AbortSignal.timeout(30000) });
+            if (!r.ok) throw new Error('Historical weather unavailable');
+            const h = (await r.json()).hourly;
+            if (!h?.time) throw new Error('Historical hours unavailable');
+            const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, hours: 0, good: 0, temp: 0 }));
+            h.time.forEach((t, i) => {
+                const hour = Number(t.slice(11, 13));
+                if (hour < 11 || hour > 16) return;
+                const rain = h.precipitation?.[i];
+                if (typeof rain !== 'number') return;
+                const score = calculateHourScore(h.apparent_temperature?.[i], h.cloud_cover?.[i], h.wind_speed_10m?.[i], rain > 0.1 ? 100 : 0);
+                if (score === null) return;
+                const m = months[Number(t.slice(5, 7)) - 1];
+                m.hours++;
+                m.good += score >= 60 ? 1 : 0;
+                m.temp += h.apparent_temperature[i];
+            });
+            return {
+                period: `${year - 2}–${year}`,
+                sourceUrl: u.href,
+                months: months.filter(m => m.hours).map(m => ({ ...m, goodPercent: Math.round(100 * m.good / m.hours), temp: Math.round(m.temp / m.hours) }))
+            };
+        }
+
         // Fetch weather for a destination
         async function fetchWeather(dest) {
+            // Primary: Open-Meteo 14-day hourly sunbathing evaluation (11am-4pm)
+            try {
+                const omUrl = new URL('https://api.open-meteo.com/v1/forecast');
+                omUrl.searchParams.set('latitude', dest.lat);
+                omUrl.searchParams.set('longitude', dest.lon);
+                omUrl.searchParams.set('hourly', 'apparent_temperature,cloud_cover,wind_speed_10m,precipitation_probability');
+                omUrl.searchParams.set('temperature_unit', 'fahrenheit');
+                omUrl.searchParams.set('wind_speed_unit', 'mph');
+                omUrl.searchParams.set('timezone', 'auto');
+                omUrl.searchParams.set('forecast_days', '14');
+                const omResp = await fetch(omUrl.href, { signal: AbortSignal.timeout(12000) });
+                if (omResp.ok) {
+                    const omData = await omResp.json();
+                    const days = processOpenMeteoHourly(omData);
+                    if (days && days.length) return { days, source: 'live', provider: 'Open-Meteo' };
+                }
+            } catch (err) {
+                console.warn(`Open-Meteo fetch failed for ${dest.name}, trying NWS fallback:`, err);
+            }
+
+            // Secondary: National Weather Service API
             try {
                 const pointsResp = await fetch(`https://api.weather.gov/points/${dest.lat},${dest.lon}`, {
                     headers: { 'User-Agent': 'SunballFinder/2.0 (tracey@example.com)' }
@@ -1087,12 +1217,12 @@
                 if (!forecastResp.ok) throw new Error('Forecast API failed');
 
                 const forecastData = await forecastResp.json();
-                return { days: processWeather(forecastData.properties.periods), source: 'live' };
+                return { days: processWeather(forecastData.properties.periods), source: 'live', provider: 'NWS' };
             } catch (error) {
                 console.error(`Weather fetch failed for ${dest.name}:`, error);
                 // Keep the experience useful for destinations outside NWS coverage
                 // and during local development. This is clearly labeled as an estimate.
-                return { days: generateDemoWeather(dest), source: 'estimate' };
+                return { days: generateDemoWeather(dest), source: 'estimate', provider: 'Demo' };
             }
         }
 
@@ -1476,6 +1606,202 @@
             button.textContent = panel.hidden ? button.dataset.closedLabel : button.dataset.openLabel;
         }
 
+        const DESTINATION_CAMS = {
+            LAX: [
+                { title: 'Santa Monica Pier & Beach Cam', zone: 'Shutters on the Beach · Casa del Mar · JW Marriott · Shangri-La', kind: 'beach', lat: 34.0092, lon: -118.4976, url: 'https://pacpark.com/santa-monica-pier-live-cam/' },
+                { title: 'Marina del Rey & Venice Coast Cam', zone: 'Ritz-Carlton Marina del Rey', kind: 'coast', lat: 33.9803, lon: -118.4517, url: 'https://www.windy.com/-Webcams/33.9803/-118.4517?33.9803,-118.4517,12' }
+            ],
+            SAN: [
+                { title: 'Coronado South Beach Live Cam', zone: 'Hotel del Coronado', kind: 'beach', lat: 32.6809, lon: -117.1784, url: 'https://hoteldel.com/live-webcam/' },
+                { title: 'La Jolla Cove Coastline Cam', zone: 'La Valencia Hotel', kind: 'beach', lat: 32.8504, lon: -117.2727, url: 'https://www.windy.com/-Webcams/32.8504/-117.2727?32.8504,-117.2727,12' },
+                { title: 'San Diego Bay & Harbor Cam', zone: 'Marriott Marquis San Diego · Westin Gaslamp', kind: 'coast', lat: 32.7093, lon: -117.1675, url: 'https://www.windy.com/-Webcams/32.7093/-117.1675?32.7093,-117.1675,12' }
+            ],
+            LAS: [
+                { title: 'Las Vegas Strip & Pool Deck Cam', zone: 'The Cosmopolitan · Vdara · Delano · Mandalay Bay', kind: 'sky', lat: 36.1098, lon: -115.1739, url: 'https://www.earthcam.com/usa/nevada/lasvegas/?cam=sign' },
+                { title: 'Red Rock & South Strip Horizon Cam', zone: 'Mandalay Bay · Delano · Strip South sky check', kind: 'sky', lat: 36.0919, lon: -115.1761, url: 'https://www.windy.com/-Webcams/36.0919/-115.1761?36.0919,-115.1761,12' }
+            ],
+            PHX: [
+                { title: 'Camelback Mountain & Paradise Valley Cam', zone: 'JW Marriott Camelback · The Phoenician · Sanctuary on Camelback', kind: 'sky', lat: 33.5150, lon: -111.9610, url: 'https://www.windy.com/-Webcams/33.5150/-111.9610?33.5150,-111.9610,12' },
+                { title: 'Scottsdale Sonoran Resort Corridor Cam', zone: 'Scottsdale Resort Corridor', kind: 'sky', lat: 33.5092, lon: -111.9261, url: 'https://www.windy.com/-Webcams/33.5092/-111.9261?33.5092,-111.9261,12' }
+            ],
+            SJU: [
+                { title: 'Condado & Ocean Park Beach Cam', zone: 'Condado Vanderbilt · La Concha Renaissance', kind: 'beach', lat: 18.4589, lon: -66.0725, url: 'https://www.earthcam.com/world/puertorico/sanjuan/' },
+                { title: 'Bahia Beach & Dorado North Coast Cam', zone: 'The St. Regis Bahia Beach · Dorado Beach Ritz-Carlton', kind: 'beach', lat: 18.4116, lon: -65.8087, url: 'https://www.windy.com/-Webcams/18.4116/-65.8087?18.4116,-65.8087,12' }
+            ],
+            FLL: [
+                { title: 'Fort Lauderdale Beach & Pelican Grand Cam', zone: 'Pelican Grand Beach Resort · W Fort Lauderdale · Ritz-Carlton · Atlantic Hotel', kind: 'beach', lat: 26.1361, lon: -80.1030, url: 'https://www.earthcam.com/usa/florida/fortlauderdale/?cam=fortlauderdalebeach' },
+                { title: 'Hollywood & Diplomat Beach Cam', zone: 'The Diplomat Beach Resort', kind: 'beach', lat: 25.9917, lon: -80.1162, url: 'https://www.windy.com/-Webcams/25.9917/-80.1162?25.9917,-80.1162,12' }
+            ],
+            MIA: [
+                { title: 'South Beach Oceanfront & 21st St Cam', zone: 'W South Beach · 1 Hotel South Beach · The Setai · Ritz-Carlton South Beach', kind: 'beach', lat: 25.7954, lon: -80.1268, url: 'https://www.earthcam.com/usa/florida/miamiandthebeaches/?cam=miamibeach' },
+                { title: 'Mid-Beach & Collins Ave Cam', zone: 'Faena Miami Beach · Fontainebleau', kind: 'beach', lat: 25.8180, lon: -80.1225, url: 'https://www.windy.com/-Webcams/25.8180/-80.1225?25.8180,-80.1225,12' }
+            ],
+            PBI: [
+                { title: 'Palm Beach Island & Breakers Ocean Cam', zone: 'The Breakers Palm Beach · The Colony Hotel', kind: 'beach', lat: 26.7128, lon: -80.0338, url: 'https://www.windy.com/-Webcams/26.7128/-80.0338?26.7128,-80.0338,12' },
+                { title: 'South Palm Beach & Manalapan Cam', zone: 'Four Seasons Palm Beach · Eau Palm Beach', kind: 'beach', lat: 26.6168, lon: -80.0369, url: 'https://www.earthcam.com/usa/florida/palmbeach/' }
+            ],
+            TPA: [
+                { title: 'Clearwater Beach & Pier 60 Gulf Cam', zone: 'Sandpearl Resort Clearwater · Opal Sands Resort', kind: 'beach', lat: 27.9785, lon: -82.8285, url: 'https://www.windy.com/-Webcams/27.9785/-82.8285?27.9785,-82.8285,12' },
+                { title: 'St. Pete Beach & Don CeSar Coast Cam', zone: 'Don CeSar · JW Marriott Tampa Bay access', kind: 'beach', lat: 27.7090, lon: -82.7410, url: 'https://www.windy.com/-Webcams/27.7090/-82.7410?27.7090,-82.7410,12' }
+            ],
+            RSW: [
+                { title: 'Vanderbilt Beach & Naples Grande Cam', zone: 'The Ritz-Carlton Naples · LaPlaya Beach Resort · Naples Grande Beach Resort · Hotel Capri Inn', kind: 'beach', lat: 26.2562, lon: -81.8232, url: 'https://www.windy.com/-Webcams/26.2562/-81.8232?26.2562,-81.8232,12' },
+                { title: 'Marco Island Crescent Beach Gulf Cam', zone: 'JW Marriott Marco Island · Naples South coast', kind: 'beach', lat: 25.9209, lon: -81.7297, url: 'https://www.windy.com/-Webcams/25.9209/-81.7297?25.9209,-81.7297,12' }
+            ],
+            MCO: [
+                { title: 'Grande Lakes Resort & Pool Horizon Cam', zone: 'JW Marriott Orlando Grande Lakes · The Ritz-Carlton Orlando', kind: 'sky', lat: 28.4045, lon: -81.4282, url: 'https://www.earthcam.com/usa/florida/orlando/' },
+                { title: 'Central Florida Lake & Sky Breeze Cam', zone: 'Orlando Resort Corridor', kind: 'sky', lat: 28.4150, lon: -81.4600, url: 'https://www.windy.com/-Webcams/28.4150/-81.4600?28.4150,-81.4600,12' }
+            ],
+            JAX: [
+                { title: 'Atlantic Beach & Pier Ocean Cam', zone: 'One Ocean Resort · Casa Marina Hotel', kind: 'beach', lat: 30.2935, lon: -81.3895, url: 'https://www.windy.com/-Webcams/30.2935/-81.3895?30.2935,-81.3895,12' },
+                { title: 'Ponte Vedra Beachfront Coast Cam', zone: 'Ponte Vedra Inn & Club', kind: 'beach', lat: 30.2397, lon: -81.3734, url: 'https://www.windy.com/-Webcams/30.2397/-81.3734?30.2397,-81.3734,12' }
+            ],
+            SAV: [
+                { title: 'Savannah Riverfront & Harbor Cam', zone: 'The Westin Savannah Harbor · JW Marriott Savannah', kind: 'coast', lat: 32.0815, lon: -81.0910, url: 'https://www.windy.com/-Webcams/32.0815/-81.0910?32.0815,-81.0910,12' },
+                { title: 'Sea Island & Golden Isles Coast Cam', zone: 'The Cloister at Sea Island', kind: 'beach', lat: 31.1816, lon: -81.3484, url: 'https://www.windy.com/-Webcams/31.1816/-81.3484?31.1816,-81.3484,12' }
+            ],
+            CHS: [
+                { title: 'Kiawah Island Sanctuary Beach Cam', zone: 'The Sanctuary at Kiawah', kind: 'beach', lat: 32.6022, lon: -80.0837, url: 'https://www.windy.com/-Webcams/32.6022/-80.0837?32.6022,-80.0837,12' },
+                { title: 'Isle of Palms & Wild Dunes Coast Cam', zone: 'Wild Dunes Resort · Belmond Charleston Place · The Spectator Hotel', kind: 'beach', lat: 32.7858, lon: -79.7892, url: 'https://www.windy.com/-Webcams/32.7858/-79.7892?32.7858,-79.7892,12' }
+            ],
+            MYR: [
+                { title: 'Grande Dunes & North Shore Ocean Cam', zone: 'Marriott Myrtle Beach Resort · Marina Inn at Grande Dunes', kind: 'beach', lat: 33.7606, lon: -78.8172, url: 'https://www.windy.com/-Webcams/33.7606/-78.8172?33.7606,-78.8172,12' },
+                { title: 'Myrtle Beach Boardwalk & Surf Cam', zone: 'Grand Strand Oceanfront', kind: 'beach', lat: 33.6891, lon: -78.8867, url: 'https://www.earthcam.com/usa/southcarolina/myrtlebeach/' }
+            ],
+            MSY: [
+                { title: 'French Quarter & Riverfront Cam', zone: 'W New Orleans French Quarter · The Roosevelt New Orleans', kind: 'sky', lat: 29.9574, lon: -90.0644, url: 'https://www.earthcam.com/usa/louisiana/neworleans/bourbonstreet/' },
+                { title: 'Lake Pontchartrain & Marina Cam', zone: 'New Orleans Lakefront & Marina', kind: 'coast', lat: 30.0236, lon: -90.1165, url: 'https://www.windy.com/-Webcams/30.0236/-90.1165?30.0236,-90.1165,12' }
+            ],
+            AUS: [
+                { title: 'Lady Bird Lake & Downtown Pool Deck Cam', zone: 'The LINE Austin · JW Marriott Austin · W Austin', kind: 'sky', lat: 30.2649, lon: -97.7470, url: 'https://www.windy.com/-Webcams/30.2649/-97.7470?30.2649,-97.7470,12' },
+                { title: 'Lake Travis & Texas Hill Country Cam', zone: 'Austin West & Lake Travis Basin', kind: 'sky', lat: 30.3910, lon: -97.9050, url: 'https://www.windy.com/-Webcams/30.3910/-97.9050?30.3910,-97.9050,12' }
+            ],
+            STT: [
+                { title: 'Secret Harbour & Great Bay East End Cam', zone: 'The Ritz-Carlton St. Thomas · Secret Harbour Beach Resort', kind: 'beach', lat: 18.3183, lon: -64.8519, url: 'https://www.windy.com/-Webcams/18.3183/-64.8519?18.3183,-64.8519,12' },
+                { title: "Frenchman's Reef & Charlotte Amalie Harbor Cam", zone: "Marriott Frenchman's Reef · Bolongo Bay Beach Resort", kind: 'beach', lat: 18.3168, lon: -64.8967, url: 'https://www.windy.com/-Webcams/18.3168/-64.8967?18.3168,-64.8967,12' }
+            ],
+            STX: [
+                { title: 'Christiansted Harbor & Reef Coast Cam', zone: 'The Buccaneer · Tamarind Reef Resort', kind: 'beach', lat: 17.7562, lon: -64.6778, url: 'https://www.windy.com/-Webcams/17.7562/-64.6778?17.7562,-64.6778,12' },
+                { title: 'Frederiksted Pier & West End Beach Cam', zone: 'Sand Castle on the Beach', kind: 'beach', lat: 17.7056, lon: -64.8856, url: 'https://www.windy.com/-Webcams/17.7056/-64.8856?17.7056,-64.8856,12' }
+            ]
+        };
+
+        function windyWebcamsUrl(lat, lon) {
+            const la = Number(lat).toFixed(4), lo = Number(lon).toFixed(4);
+            return `https://www.windy.com/-Webcams/${la}/${lo}?${la},${lo},12`;
+        }
+
+        function windyEmbedUrl(lat, lon) {
+            const la = Number(lat).toFixed(4), lo = Number(lon).toFixed(4);
+            return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=in&metricTemp=%C2%B0F&metricWind=mph&zoom=11&overlay=clouds&product=ecmwf&level=surface&lat=${la}&lon=${lo}&detailLat=${la}&detailLon=${lo}&marker=true`;
+        }
+
+        function getDestinationCams(code, dest) {
+            const baseLat = Number(dest?.lat) || 26.1224;
+            const baseLon = Number(dest?.lon) || -80.1373;
+            const curated = DESTINATION_CAMS[code];
+            const raw = Array.isArray(curated) && curated.length
+                ? curated
+                : [{
+                    title: `${dest?.name || code} Coast & Sky View`,
+                    zone: 'Coordinate backup camera area',
+                    kind: (dest?.hotels?.beach?.length ? 'beach' : 'sky'),
+                    lat: baseLat,
+                    lon: baseLon,
+                    url: windyWebcamsUrl(baseLat, baseLon)
+                }];
+            return raw.map(cam => ({
+                ...cam,
+                windyUrl: windyWebcamsUrl(cam.lat, cam.lon),
+                embedUrl: windyEmbedUrl(cam.lat, cam.lon),
+                searchBackupUrl: `https://www.google.com/search?q=${encodeURIComponent(`${cam.title} ${dest?.name || ''} ${dest?.state || ''} live webcam`.trim())}`
+            }));
+        }
+
+        function toggleCamDetails(code, button) {
+            toggleDetails(`cam-details-${code}`, button);
+            const panel = document.getElementById(`cam-details-${code}`);
+            if (!panel || panel.hidden) return;
+            const slot = document.getElementById(`cam-preview-slot-${code}`);
+            if (slot && !slot.dataset.mounted) {
+                const dest = DESTINATIONS[code];
+                const cams = getDestinationCams(code, dest);
+                const primary = cams[0];
+                slot.dataset.mounted = 'true';
+                slot.innerHTML = `<iframe id="cam-iframe-${code}" class="cam-live-iframe" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" title="Live coast and sky conditions for ${dest?.name || code}" src="${primary.embedUrl}"></iframe>`;
+            }
+        }
+
+        function focusDestinationCam(code, camIndex) {
+            const dest = DESTINATIONS[code];
+            const cams = getDestinationCams(code, dest);
+            const chosen = cams[camIndex] || cams[0];
+            const iframe = document.getElementById(`cam-iframe-${code}`);
+            if (iframe) iframe.src = chosen.embedUrl;
+            const label = document.getElementById(`cam-preview-label-${code}`);
+            if (label) label.textContent = `${chosen.title} (${chosen.lat.toFixed(3)}, ${chosen.lon.toFixed(3)})`;
+            document.querySelectorAll(`[data-cam-card="${code}"]`).forEach((el, idx) => {
+                el.classList.toggle('active-cam', idx === camIndex);
+            });
+        }
+
+        async function showSeasonalTiming(code, button) {
+            const dest = DESTINATIONS[code];
+            const box = document.getElementById(`season-results-${code}`);
+            if (!dest || !box) return;
+            if (button) button.disabled = true;
+            box.hidden = false;
+            box.textContent = 'Checking 3 years of historical hourly modeled weather (Open-Meteo)…';
+            try {
+                const cacheKey = `sunball-season-${code}-${new Date().getFullYear()}`;
+                let context = null;
+                try { context = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch {}
+                if (!context) {
+                    context = await fetchSeasonalContext(dest);
+                    try { localStorage.setItem(cacheKey, JSON.stringify(context)); } catch {}
+                }
+                const best = [...context.months].sort((a, b) => b.goodPercent - a.goodPercent).slice(0, 3);
+                box.innerHTML = `
+                    <p style="margin:0 0 6px;"><strong>Promising seasons · ${context.period}</strong></p>
+                    ${best.map(m => `
+                        <p style="margin:3px 0;">${new Date(2000, m.month - 1, 1).toLocaleString('en-US', { month: 'long' })}: <strong>${m.goodPercent}%</strong> of modeled 11am–4pm hours rated good/excellent · ${m.temp}°F avg feels-like</p>
+                    `).join('')}
+                    <span style="display:block; margin-top:6px; font-size:.7rem; color:var(--muted);">Modeled 11am–4pm outdoor conditions at city coordinates. <a href="${context.sourceUrl}" target="_blank" rel="noopener">Open-Meteo archive source ↗</a></span>
+                `;
+            } catch (err) {
+                box.textContent = 'Seasonal modeled weather temporarily unavailable.';
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
+        function onCardHotelChanged(code, hotelName) {
+            const dest = DESTINATIONS[code];
+            if (!dest) return;
+            const needle = String(hotelName || '').toLowerCase();
+            const stopWords = new Set(['hotel', 'resort', 'beach', 'club', 'marriott', 'westin', 'ritz', 'carlton', 'ritz-carlton', 'four', 'seasons', 'spa', 'inn', 'grand', 'grande', 'house', 'palace', 'the']);
+            const tokens = needle.split(/[^a-z0-9]+/).filter(w => w.length > 3 && !stopWords.has(w));
+            const cards = document.querySelectorAll(`[data-cam-card="${code}"]`);
+            let matchedIndex = 0;
+            let highestRank = 0;
+            const cams = getDestinationCams(code, dest);
+            cams.forEach((cam, idx) => {
+                const zoneText = String(cam.zone || '').toLowerCase();
+                const exact = Boolean(needle && zoneText.includes(needle));
+                const tokenMatch = Boolean(!exact && tokens.length && tokens.some(t => zoneText.includes(t)));
+                const rank = exact ? 2 : tokenMatch ? 1 : 0;
+                if (rank > highestRank) {
+                    highestRank = rank;
+                    matchedIndex = idx;
+                }
+            });
+            cards.forEach((el, idx) => {
+                el.classList.toggle('active-cam', idx === matchedIndex);
+            });
+            focusDestinationCam(code, matchedIndex);
+        }
+
+
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
             const matchCriteria = result.matchCriteria || criteria;
@@ -1493,6 +1819,12 @@
             if (hotelFilter === 'all' || hotelFilter === 'beach') {
                 hotels = hotels.concat(dest.hotels.beach.map(h => ({ name: h, type: 'beach' })));
             }
+
+            const cams = getDestinationCams(code, dest);
+            const hasBeachCam = cams.some(c => c.kind === 'beach' || c.kind === 'coast');
+            const camClosedLabel = hasBeachCam ? '🎥 Check live beach cams' : '🎥 Check live sky & resort cams';
+            const camOpenLabel = hasBeachCam ? '🎥 Hide live beach cams' : '🎥 Hide live sky & resort cams';
+            const primaryCam = cams[0];
 
             // Cannabis status
             const cannabisStatus = dest.cannabis === 'recreational'
@@ -1546,6 +1878,37 @@
                         </div>
                     </div>
 
+                    <div class="cams-section">
+                        <div class="section-title">${hasBeachCam ? '🎥 Live Coastline & Beach Cams' : '🎥 Live Sky & Resort Views'}</div>
+                        <button class="google-action check-cams-btn" type="button" aria-expanded="false" data-closed-label="${camClosedLabel}" data-open-label="${camOpenLabel}" onclick="event.stopPropagation(); toggleCamDetails('${code}', this)">${camClosedLabel}</button>
+                        <div class="detail-panel" id="cam-details-${code}" hidden onclick="event.stopPropagation()">
+                            <div class="cam-cards">
+                                ${cams.map((cam, idx) => `
+                                    <div class="cam-card ${idx === 0 ? 'active-cam' : ''}" data-cam-card="${code}">
+                                        <div class="cam-card-title">${cam.kind === 'beach' ? '🏖️' : cam.kind === 'coast' ? '⚓' : '☀️'} ${cam.title}</div>
+                                        <div class="cam-zone">${cam.zone}</div>
+                                        <div class="google-actions" style="border-top:0; padding-top:0; margin-top:6px;">
+                                            <a class="google-action" href="${cam.url}" target="_blank" rel="noopener">▶ Live cam ↗</a>
+                                            <a class="google-action" href="${cam.windyUrl}" target="_blank" rel="noopener">🌤️ Daylight replay ↗</a>
+                                            <button class="google-action" type="button" onclick="focusDestinationCam('${code}', ${idx})">📡 Preview sky map</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="cam-preview-box">
+                                <div class="cam-preview-header">
+                                    <span><strong>Live sky, cloud &amp; wind check:</strong> <span id="cam-preview-label-${code}">${primaryCam.title} (${primaryCam.lat.toFixed(3)}, ${primaryCam.lon.toFixed(3)})</span></span>
+                                    <a class="google-action" href="${primaryCam.searchBackupUrl}" target="_blank" rel="noopener" style="padding:4px 8px;">🔍 Backup feeds ↗</a>
+                                </div>
+                                <div id="cam-preview-slot-${code}"></div>
+                            </div>
+                            <div class="google-actions">
+                                <button class="google-action" type="button" onclick="checkOsmBackupCams('${code}', this)">🔄 Check public OSM / coordinate backup cams</button>
+                            </div>
+                            <div class="cam-backup-note" id="cam-backup-results-${code}" hidden></div>
+                        </div>
+                    </div>
+
                     <div class="flights-section">
                         <div class="section-title">✈️ Nonstop Flights</div>
                         <div class="flight-options" data-route-options="${code}"><button class="google-action check-flights-btn" type="button" onclick="event.stopPropagation(); checkFlights('${code}')">✈ Check flights</button></div>
@@ -1554,7 +1917,17 @@
 
                     <div class="hotels-section">
                         <div class="section-title">🏨 Hotels</div>
-                        <button class="google-action check-hotels-btn" type="button" aria-expanded="false" data-closed-label="🏨 Check hotels" data-open-label="🏨 Hide hotel options" onclick="event.stopPropagation(); toggleDetails('hotel-details-${code}', this)">🏨 Check hotels</button>
+                        <div class="hotel-selector-wrap">
+                            <label class="hotel-selector-label" for="hotel-select-${code}">Your Favorite Hotel at ${dest.name}</label>
+                            <select id="hotel-select-${code}" class="hotel-selector" onclick="event.stopPropagation()" onchange="onCardHotelChanged('${code}', this.value)">
+                                ${hotels.map(h => `<option value="${h.name}">${h.name} (${h.type === 'marriott' ? 'Marriott' : h.type === 'noble' ? 'Noble House' : 'Beach'})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <button class="google-action check-hotels-btn" type="button" aria-expanded="false" data-closed-label="🏨 Check hotels &amp; rates" data-open-label="🏨 Hide hotel options" onclick="event.stopPropagation(); toggleDetails('hotel-details-${code}', this)">🏨 Check hotels &amp; rates</button>
+                            <button class="google-action season-btn" type="button" onclick="event.stopPropagation(); showSeasonalTiming('${code}', this)">🌤️ Explore seasonal timing</button>
+                        </div>
+                        <div class="season-box" id="season-results-${code}" hidden onclick="event.stopPropagation()"></div>
                         <div class="detail-panel" id="hotel-details-${code}" hidden>
                         <div class="hotel-chips">
                             ${hotels.slice(0, 4).map(h => `
@@ -1563,9 +1936,13 @@
                                     ${h.type === 'marriott' ? '🏨' : h.type === 'noble' ? '✨' : '🏖️'} ${h.name.substring(0, 25)}${h.name.length > 25 ? '...' : ''}
                                 </a>
                             `).join('')}
-                            <a href="https://www.marriott.com/search/findHotels.mi?destinationAddress.city=${encodeURIComponent(dest.name)}&destinationAddress.stateProvince=${dest.state}"
+                            <a href="https://www.google.com/travel/search?q=${encodeURIComponent('Marriott Bonvoy hotels in ' + dest.name + ', ' + dest.state)}"
                                target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
-                                🔍 All Marriott
+                                🔍 All Bonvoy
+                            </a>
+                            <a href="https://www.marriott.com/search/submitSearch.mi?destinationAddress.city=${encodeURIComponent(dest.name)}&destinationAddress.stateProvince=${dest.state}&isInternalSearch=true&searchType=InCity"
+                               target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
+                                🏨 Marriott.com
                             </a>
                         </div>
                         <div class="google-actions">

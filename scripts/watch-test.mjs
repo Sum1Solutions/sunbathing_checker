@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {hourScore,weatherDays,bestStay,compareQuote,resolveCams,discoverOsmBackupCams} from '../watch-core.mjs';
+import {destinations} from '../watch-data.mjs';
+assert.equal(hourScore(null,10,5,0),null,'missing weather cannot become a rating');
+assert(hourScore(79,10,5,0)>hourScore(79,90,25,80),'wind/rain/cloud reduce sunbathing quality');
+assert(hourScore(79,100,5,0)<38,'an overcast calm warm day is poor for sunbathing');
+const days=Array.from({length:5},(_,i)=>({date:`2026-10-${String(10+i).padStart(2,'0')}`,score:80,category:'Excellent',hours:6}));
+assert.equal(bestStay(days,3,'2026-10-10').end,'2026-10-13');
+assert.equal(bestStay([days[0],...days.slice(2)],3,'2026-10-10'),null,'a missing day must not bridge a trip');
+assert.deepEqual(weatherDays({hourly:{time:['2026-10-10T11:00'],apparent_temperature:[null],cloud_cover:[10],wind_speed_10m:[5],precipitation_probability:[0]}}),[]);
+const prior={key:'a',total:2000,observedAt:'2026-10-01',notified:true};
+assert(compareQuote([prior],{key:'a',total:1750,observedAt:'2026-10-02',complete:true,weatherCategory:'Good'}).notify);
+assert(!compareQuote([prior],{key:'a',total:1750,observedAt:'2026-10-02',complete:false,weatherCategory:'Good'}).notify,'unverified rates cannot alert');
+assert(!compareQuote([prior],{key:'b',total:1500,observedAt:'2026-10-02',complete:true,weatherCategory:'Good'}).notify,'different terms are not price drops');
+assert(!compareQuote([prior],{key:'a',total:1900,observedAt:'2026-10-02',complete:true,weatherCategory:'Good'}).notify,'small changes stay quiet');
+assert.equal(Object.keys(destinations).length,19,'all 19 destinations are present');
+for(const [code,dest] of Object.entries(destinations)){
+  const cams=resolveCams(dest);
+  assert(cams.length>=2,`${code} has curated hotel-zone cameras`);
+  assert(cams.every(c=>c.url.startsWith('https://')&&c.windyUrl.startsWith('https://')&&c.embedUrl.startsWith('https://')),`${code} cameras include live and backup URLs`);
+}
+const sanCams=resolveCams(destinations.SAN,'La Valencia Hotel');
+assert(sanCams[0].title.includes('La Jolla'),'selected hotel prioritizes its matching beach zone camera');
+const fallbackCams=resolveCams({name:'Key West',state:'FL',lat:24.5551,lon:-81.7800,hotels:{beach:['Casa Marina']}});
+assert.equal(fallbackCams.length,1,'missing curated camera list falls back to coordinate backup');
+assert.equal(fallbackCams[0].isCoordinateBackup,true);
+const osmFound=await discoverOsmBackupCams(destinations.FLL,destinations.FLL.cams[0],async()=>({ok:true,json:async()=>({elements:[{lat:26.136,lon:-80.103,tags:{name:'Fort Lauderdale Beach North','contact:webcam':'https://example.com/fll-cam'}}]})}));
+assert.equal(osmFound.status,'osm-found');
+assert.equal(osmFound.items[0].url,'https://example.com/fll-cam');
+const osmFallback=await discoverOsmBackupCams(destinations.FLL,destinations.FLL.cams[0],async()=>{throw Error('network down');});
+assert.equal(osmFallback.status,'coordinate-backup');
+assert(osmFallback.fallbackLinks.length>=3,'coordinate backup links are always returned when OSM lookup fails');
+console.log('Weather quality, missing data, contiguous stays, comparable alerts, and curated + backup camera checks passed.');

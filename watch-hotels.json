@@ -1,0 +1,392 @@
+{
+  "source": "index.html DESTINATIONS hotels; selected by Jon on 2026-10-06",
+  "note": "Source names retained. Brand buckets are not verified affiliations. Resolve aliases, renames, actual locations and operating status before rate collection.",
+  "destinations": [
+    {
+      "airport": "LAX",
+      "destination": "Los Angeles",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Santa Monica Le Merigot",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Ritz-Carlton Marina del Rey",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Hotel Shangri-La Santa Monica",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Shutters on the Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Casa del Mar",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "SAN",
+      "destination": "San Diego",
+      "hotels": [
+        {
+          "repoName": "Marriott Marquis San Diego",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Westin San Diego Gaslamp",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Hotel del Coronado",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "La Valencia Hotel",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "LAS",
+      "destination": "Las Vegas",
+      "hotels": [
+        {
+          "repoName": "The Cosmopolitan",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Vdara",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Delano Las Vegas",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "PHX",
+      "destination": "Phoenix/Scottsdale",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Scottsdale Camelback",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Phoenician",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Sanctuary on Camelback",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "SJU",
+      "destination": "San Juan",
+      "hotels": [
+        {
+          "repoName": "Condado Vanderbilt",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "La Concha Renaissance",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The St. Regis Bahia Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Dorado Beach Ritz-Carlton",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "St. Regis Bahia Beach",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "FLL",
+      "destination": "Fort Lauderdale",
+      "hotels": [
+        {
+          "repoName": "W Fort Lauderdale",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Ritz-Carlton Fort Lauderdale",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Pelican Grand Beach Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Atlantic Hotel & Spa",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Diplomat Beach Resort",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "MIA",
+      "destination": "Miami",
+      "hotels": [
+        {
+          "repoName": "Faena Miami Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Ritz-Carlton South Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "W South Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Fontainebleau",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Setai",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "1 Hotel South Beach",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "PBI",
+      "destination": "West Palm Beach",
+      "hotels": [
+        {
+          "repoName": "The Breakers Palm Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Eau Palm Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Four Seasons Palm Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Colony Hotel",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "TPA",
+      "destination": "Tampa/Clearwater",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Tampa",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Sandpearl Resort Clearwater",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Don CeSar",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Opal Sands Resort",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "RSW",
+      "destination": "Fort Myers/Naples",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Marco Island",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Ritz-Carlton Naples",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "LaPlaya Beach & Golf Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Naples Grande Beach Resort",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "MCO",
+      "destination": "Orlando",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Orlando Grande Lakes",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Ritz-Carlton Orlando",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "JAX",
+      "destination": "Jacksonville",
+      "hotels": [
+        {
+          "repoName": "Ponte Vedra Inn & Club",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "One Ocean Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Casa Marina Hotel",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "SAV",
+      "destination": "Savannah",
+      "hotels": [
+        {
+          "repoName": "The Westin Savannah Harbor",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "JW Marriott Savannah",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Cloister at Sea Island",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "CHS",
+      "destination": "Charleston",
+      "hotels": [
+        {
+          "repoName": "Belmond Charleston Place",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Spectator Hotel",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Wild Dunes Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "The Sanctuary at Kiawah",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "MYR",
+      "destination": "Myrtle Beach",
+      "hotels": [
+        {
+          "repoName": "Marriott Myrtle Beach Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Marina Inn at Grande Dunes",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "MSY",
+      "destination": "New Orleans",
+      "hotels": [
+        {
+          "repoName": "The Roosevelt New Orleans",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "W New Orleans French Quarter",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "AUS",
+      "destination": "Austin",
+      "hotels": [
+        {
+          "repoName": "JW Marriott Austin",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "W Austin",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "STT",
+      "destination": "St. Thomas",
+      "hotels": [
+        {
+          "repoName": "The Ritz-Carlton St. Thomas",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Marriott Frenchman's Reef",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Secret Harbour Beach Resort",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Bolongo Bay Beach Resort",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    },
+    {
+      "airport": "STX",
+      "destination": "St. Croix",
+      "hotels": [
+        {
+          "repoName": "The Buccaneer",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Sand Castle on the Beach",
+          "identityStatus": "needs_current_verification"
+        },
+        {
+          "repoName": "Tamarind Reef Resort",
+          "identityStatus": "needs_current_verification"
+        }
+      ]
+    }
+  ]
+}

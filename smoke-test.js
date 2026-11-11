@@ -24,6 +24,9 @@ try {
   check('Google hotel map links are present', page.text.includes('googleMapsPlaceUrl') && page.text.includes('Show hotels in Maps'));
   check('cannabis map links are present', page.text.includes('googleCannabisUrl') && page.text.includes('storefronts in Maps'));
   check('hotel and dispensary checks are opt-in', page.text.includes('Check hotels') && page.text.includes('Check dispensaries') && page.text.includes('toggleDetails'));
+  check('live beach and sky cams are opt-in with backup', page.text.includes('DESTINATION_CAMS') && page.text.includes('toggleCamDetails') && page.text.includes('checkOsmBackupCams') && page.text.includes('Check live beach cams'));
+  check('Open-Meteo hourly weather and seasonal timing are present', page.text.includes('Open-Meteo') && page.text.includes('processOpenMeteoHourly') && page.text.includes('showSeasonalTiming'));
+  check('favorite hotel selection is present', page.text.includes('hotel-selector') && page.text.includes('onCardHotelChanged'));
   check('Google destination links are present', page.text.includes('googleHotelsUrl') && page.text.includes('googleFlightsUrl') && page.text.includes('googleMapsPlaceUrl'));
   check('flight checks are opt-in', page.text.includes('Check flights') && page.text.includes('checkFlights') && !page.text.includes('verifyAllRoutes('));
   check('strict and broadened matching are explained', page.text.includes('applyRelaxedSearch') && page.text.includes('No exact Sunball windows') && page.text.includes('Show strict-only results'));

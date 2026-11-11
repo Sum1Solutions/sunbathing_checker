@@ -1,5 +1,13 @@
 # Tracey’s Sunball Finder
 
+## Personal watch preview (October 2026)
+
+Run `node scripts/preview.mjs` and open http://127.0.0.1:8788/watch.html.
+The personal dashboard adds flexible forecast ratings, favorite-hotel selectors,
+seasonal exploration, and comparable quote history. Read [PERSONAL_WATCH.md](PERSONAL_WATCH.md)
+for verified capabilities, existing API connections, and deployment/schedule gaps.
+Run `node scripts/watch-test.mjs` and `node scripts/watch-api-test.mjs` for its checks.
+
 **Tracey’s Sunball Finder** — Finding bright, comfortable weather windows for a warmer escape.
 
 A tool for New Englanders seeking optimal sun exposure during winter. Scans warm destinations for consecutive days of ideal weather, cross-referenced with nonstop flights from PVD/BOS.
@@ -59,6 +67,7 @@ Toggle airports on/off to filter which flights appear.
 - Search nearby hotels and cannabis storefronts in Google Maps
 - Reveal the curated hotel names for a destination with **Check hotels**
 - Reveal a current Google Maps storefront search with **Check dispensaries**
+- Reveal curated hotel-zone beach, coast, and sky cameras with **Check live beach cams** / **Check live sky & resort cams** (lazy-mounted live sky/cloud/wind embed + daylight replay + OpenStreetMap/coordinate backup lookup)
 - Search Google Hotels for the selected city and dates
 - Search Google Flights after dated nonstop availability is verified
 
