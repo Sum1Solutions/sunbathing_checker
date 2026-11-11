@@ -549,6 +549,12 @@
         .cam-preview-box { margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #f2eee5; }
         .cam-preview-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 12px; font-size: .74rem; color: var(--ink); background: #fffdf8; border-bottom: 1px solid var(--line); }
         .cam-live-iframe { width: 100%; height: 240px; border: 0; display: block; background: #e8f0ef; }
+        .map-layer-bar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+        .map-layer-btn { border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 7px; padding: 3px 7px; font-size: .68rem; font-weight: 800; cursor: pointer; font-family: inherit; transition: all .15s; }
+        .map-layer-btn:hover { color: var(--ink); border-color: rgba(255,79,163,.4); }
+        .map-layer-btn.active { background: #fff0f6; color: var(--coral-dark); border-color: var(--coral); }
+        .cam-map-placeholder { height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #e8f0ef; color: var(--muted); font-size: .78rem; text-align: center; padding: 16px; cursor: pointer; }
+        .cam-map-placeholder:hover { background: #dceae7; color: var(--ink); }
         .cam-backup-note { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #f2eee5; font-size: .74rem; color: var(--muted); line-height: 1.45; }
         .hotel-selector-wrap { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(16,42,67,.08); }
         .hotel-selector-label { font-size: .74rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 5px; }
@@ -1486,7 +1492,7 @@
             const relaxation = strictMatchCount === 0 && options.allowRelaxedFallback !== false
                 ? applyRelaxedSearch(results, criteria)
                 : null;
-            const displayResults = relaxation ? results.filter(result => result.windows.length > 0) : results;
+            const displayResults = results;
 
             // Qualifying windows always outrank partial matches; score ranks the windows.
             displayResults.sort((a, b) => {
@@ -1513,16 +1519,17 @@
             const top = displayResults[0];
             const liveCount = displayResults.filter(r => r.weatherSource === 'live').length;
             const noStrictMatch = strictMatchCount === 0;
+            const qualifyingCount = displayResults.filter(r => r.windows.length > 0).length;
             const resultBanner = relaxation
-                ? `<div class="relaxation-banner"><strong>No exact Sunball windows matched your settings.</strong><p>We broadened the search automatically by ${relaxation.label}. The results below are possibilities under those broadened settings—not strict matches.</p><button class="google-action" type="button" onclick="scanForSunballs({allowRelaxedFallback:false})">Show strict-only results</button> <span style="font-size:.78rem; color:var(--muted);">or adjust the controls above and scan again.</span></div>`
+                ? `<div class="relaxation-banner"><strong>No exact Sunball windows matched your settings.</strong><p>We broadened the search automatically by ${relaxation.label}. Qualifying broadened possibilities are ranked first below, followed by all other tracked destinations.</p><button class="google-action" type="button" onclick="scanForSunballs({allowRelaxedFallback:false})">Show strict-only results</button> <span style="font-size:.78rem; color:var(--muted);">or adjust the controls above and scan again.</span></div>`
                 : noStrictMatch
                     ? `<div class="relaxation-banner"><strong>No Sunball windows matched these settings.</strong><p>Try lowering the sunshine threshold, allowing fewer consecutive days, or widening the temperature range above.</p></div>`
                 : '';
             resultsDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin: 10px 0 18px; flex-wrap:wrap;">
                     <div><div style="color:var(--coral-dark); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase;">Your sunny shortlist</div>
-                    <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${relaxation ? `${displayResults.length} broadened possibilities` : `${displayResults.length} places worth a look`}</h2></div>
-                    <div style="color:var(--muted); font-size:.83rem;">${noStrictMatch ? 'No strict best match' : `Best match: <strong style="color:var(--ink);">${top.dest.name}</strong>`} · ${displayResults.filter(r => r.windows.length > 0).length} qualifying windows · ${liveCount}/${displayResults.length} live forecasts</div>
+                    <h2 style="font: 500 2rem Georgia,serif; margin-top:5px;">${relaxation ? `${qualifyingCount} broadened possibilities (${displayResults.length} places total)` : `${displayResults.length} places worth a look`}</h2></div>
+                    <div style="color:var(--muted); font-size:.83rem;">${noStrictMatch ? 'No strict best match' : `Best match: <strong style="color:var(--ink);">${top.dest.name}</strong>`} · ${qualifyingCount} qualifying windows · ${liveCount}/${displayResults.length} live forecasts</div>
                 </div>
                 ${resultBanner}
                 <details class="science-note" style="margin: 0 0 20px;">
@@ -1530,6 +1537,7 @@
                     <p style="margin:10px 0 0;">Only a qualifying consecutive window receives a score from 0–100: up to 45 points for streak length, 35 for forecast sunshine, and 20 for temperature fit. A dash means there is no qualifying window; individual promising days are shown separately. Sunshine is estimated from forecast descriptions, so this is a travel-planning heuristic—not a UV or vitamin D measurement.</p>
                 </details>
                 <div class="sunball-grid">${displayResults.map(r => renderDestinationCard(r, criteria, hotelFilter)).join('')}</div>`;
+            initWeatherMapObserver();
         }
 
         const AIRLINE_NAMES = { B6: 'JetBlue', WN: 'Southwest', MX: 'Breeze', NK: 'Spirit', F9: 'Frontier' };
@@ -1701,9 +1709,10 @@
             return `https://www.windy.com/-Webcams/${la}/${lo}?${la},${lo},12`;
         }
 
-        function windyEmbedUrl(lat, lon) {
+        function windyEmbedUrl(lat, lon, overlay = 'clouds') {
             const la = Number(lat).toFixed(4), lo = Number(lon).toFixed(4);
-            return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=in&metricTemp=%C2%B0F&metricWind=mph&zoom=11&overlay=clouds&product=ecmwf&level=surface&lat=${la}&lon=${lo}&detailLat=${la}&detailLon=${lo}&marker=true`;
+            const safeOverlay = ['clouds', 'temp', 'wind', 'rain'].includes(overlay) ? overlay : 'clouds';
+            return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=in&metricTemp=%C2%B0F&metricWind=mph&zoom=11&overlay=${safeOverlay}&product=ecmwf&level=surface&lat=${la}&lon=${lo}&detailLat=${la}&detailLon=${lo}&marker=true`;
         }
 
         function getDestinationCams(code, dest) {
@@ -1728,26 +1737,120 @@
             }));
         }
 
+        const MAX_ACTIVE_WEATHER_MAPS = 6;
+        const visibleMapCodes = new Set();
+        const mountedMapOrder = [];
+        let weatherMapObserver = null;
+
+        function mountWeatherMap(code, force = false) {
+            const slot = document.getElementById(`cam-preview-slot-${code}`);
+            if (!slot) return;
+            const dest = DESTINATIONS[code];
+            const cams = getDestinationCams(code, dest);
+            const camIndex = Number(slot.dataset.camIndex || 0);
+            const overlay = slot.dataset.overlay || 'clouds';
+            const chosen = cams[camIndex] || cams[0];
+            const targetUrl = windyEmbedUrl(chosen.lat, chosen.lon, overlay);
+
+            const existingIframe = document.getElementById(`cam-iframe-${code}`);
+            if (existingIframe) {
+                if (existingIframe.src !== targetUrl) existingIframe.src = targetUrl;
+                const idx = mountedMapOrder.indexOf(code);
+                if (idx !== -1) mountedMapOrder.splice(idx, 1);
+                mountedMapOrder.push(code);
+                return;
+            }
+
+            while (mountedMapOrder.length >= MAX_ACTIVE_WEATHER_MAPS) {
+                const evictCandidate = mountedMapOrder.find(c => !visibleMapCodes.has(c) && c !== code) || (force ? mountedMapOrder[0] : null);
+                if (!evictCandidate || evictCandidate === code) break;
+                unmountWeatherMap(evictCandidate);
+            }
+
+            slot.dataset.mounted = 'true';
+            slot.innerHTML = `<iframe id="cam-iframe-${code}" class="cam-live-iframe" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" title="Live coast and sky weather map for ${dest?.name || code}" src="${targetUrl}"></iframe>`;
+            const idx = mountedMapOrder.indexOf(code);
+            if (idx !== -1) mountedMapOrder.splice(idx, 1);
+            mountedMapOrder.push(code);
+        }
+
+        function unmountWeatherMap(code) {
+            const idx = mountedMapOrder.indexOf(code);
+            if (idx !== -1) mountedMapOrder.splice(idx, 1);
+            const slot = document.getElementById(`cam-preview-slot-${code}`);
+            if (!slot) return;
+            const dest = DESTINATIONS[code];
+            slot.dataset.mounted = 'false';
+            slot.innerHTML = `<div class="cam-map-placeholder" onclick="mountWeatherMap('${code}', true)"><span>🗺️ Interactive weather map ready for <strong>${dest?.name || code}</strong></span><span style="color:var(--coral-dark); font-weight:800;">Click or scroll here to load live cloud, wind &amp; temp map</span></div>`;
+        }
+
+        function initWeatherMapObserver() {
+            if (weatherMapObserver) weatherMapObserver.disconnect();
+            visibleMapCodes.clear();
+            mountedMapOrder.length = 0;
+            if (typeof IntersectionObserver === 'undefined') {
+                Object.keys(DESTINATIONS).slice(0, MAX_ACTIVE_WEATHER_MAPS).forEach(c => mountWeatherMap(c));
+                return;
+            }
+            weatherMapObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const code = entry.target.dataset.camSlot;
+                    if (!code) return;
+                    if (entry.isIntersecting) {
+                        visibleMapCodes.add(code);
+                        mountWeatherMap(code);
+                    } else {
+                        visibleMapCodes.delete(code);
+                    }
+                });
+                visibleMapCodes.forEach(code => {
+                    const slot = document.getElementById(`cam-preview-slot-${code}`);
+                    if (slot && slot.dataset.mounted !== 'true' && mountedMapOrder.length < MAX_ACTIVE_WEATHER_MAPS) {
+                        mountWeatherMap(code);
+                    }
+                });
+            }, { rootMargin: '280px 0px' });
+
+            document.querySelectorAll('[data-cam-slot]').forEach(slot => {
+                weatherMapObserver.observe(slot);
+            });
+        }
+
+        function setWeatherMapLayer(code, overlay, button) {
+            const slot = document.getElementById(`cam-preview-slot-${code}`);
+            if (!slot) return;
+            slot.dataset.overlay = overlay;
+            const card = document.querySelector(`.sunball-card[data-destination="${code}"]`);
+            if (card) {
+                card.querySelectorAll('.map-layer-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn === button);
+                });
+            }
+            mountWeatherMap(code, true);
+        }
+
         function toggleCamDetails(code, button) {
             toggleDetails(`cam-details-${code}`, button);
             const panel = document.getElementById(`cam-details-${code}`);
             if (!panel || panel.hidden) return;
-            const slot = document.getElementById(`cam-preview-slot-${code}`);
-            if (slot && !slot.dataset.mounted) {
-                const dest = DESTINATIONS[code];
-                const cams = getDestinationCams(code, dest);
-                const primary = cams[0];
-                slot.dataset.mounted = 'true';
-                slot.innerHTML = `<iframe id="cam-iframe-${code}" class="cam-live-iframe" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" title="Live coast and sky conditions for ${dest?.name || code}" src="${primary.embedUrl}"></iframe>`;
-            }
+            mountWeatherMap(code, true);
         }
 
         function focusDestinationCam(code, camIndex) {
             const dest = DESTINATIONS[code];
             const cams = getDestinationCams(code, dest);
             const chosen = cams[camIndex] || cams[0];
-            const iframe = document.getElementById(`cam-iframe-${code}`);
-            if (iframe) iframe.src = chosen.embedUrl;
+            const panel = document.getElementById(`cam-details-${code}`);
+            if (panel && panel.hidden) {
+                const toggleBtn = document.querySelector(`.sunball-card[data-destination="${code}"] .check-cams-btn`);
+                if (toggleBtn) toggleDetails(`cam-details-${code}`, toggleBtn);
+                else panel.hidden = false;
+            }
+            const slot = document.getElementById(`cam-preview-slot-${code}`);
+            if (slot) {
+                slot.dataset.camIndex = String(camIndex);
+                mountWeatherMap(code, true);
+            }
             const label = document.getElementById(`cam-preview-label-${code}`);
             if (label) label.textContent = `${chosen.title} (${chosen.lat.toFixed(3)}, ${chosen.lon.toFixed(3)})`;
             document.querySelectorAll(`[data-cam-card="${code}"]`).forEach((el, idx) => {
@@ -1935,11 +2038,11 @@
                     </div>
 
                     <div class="card-tab-panel cams-section" data-tab-name="cams">
-                        <div class="section-title">${hasBeachCam ? '🎥 Live Coastline & Beach Cams' : '🎥 Live Sky & Resort Views'}</div>
-                        <div style="margin-top:10px;">
-                            <button class="google-action check-cams-btn" type="button" aria-expanded="false" data-closed-label="${camClosedLabel}" data-open-label="${camOpenLabel}" onclick="event.stopPropagation(); toggleCamDetails('${code}', this)">${camClosedLabel}</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <div class="section-title">${hasBeachCam ? '🎥 Live Coastline & Beach Cams + Weather Map' : '🎥 Live Sky & Resort Views + Weather Map'}</div>
+                            <button class="google-action check-cams-btn" type="button" aria-expanded="true" data-closed-label="${camClosedLabel}" data-open-label="${camOpenLabel}" style="padding:4px 8px; font-size:.7rem;" onclick="event.stopPropagation(); toggleCamDetails('${code}', this)">${camOpenLabel}</button>
                         </div>
-                        <div class="detail-panel" id="cam-details-${code}" hidden onclick="event.stopPropagation()">
+                        <div class="detail-panel" id="cam-details-${code}" onclick="event.stopPropagation()">
                             <div class="cam-cards">
                                 ${cams.map((cam, idx) => `
                                     <div class="cam-card ${idx === 0 ? 'active-cam' : ''}" data-cam-card="${code}">
@@ -1947,7 +2050,7 @@
                                         <div class="cam-zone">${cam.zone}</div>
                                         <div class="google-actions" style="border-top:0; padding-top:0; margin-top:6px;">
                                             <a class="google-action" href="${cam.url}" target="_blank" rel="noopener">▶ Live cam ↗</a>
-                                            <a class="google-action" href="${cam.windyUrl}" target="_blank" rel="noopener">🌤️ Daylight replay ↗</a>
+                                            <a class="google-action" href="${cam.windyUrl}" target="_blank" rel="noopener">🗺️ Weather map &amp; cams ↗</a>
                                             <button class="google-action" type="button" onclick="focusDestinationCam('${code}', ${idx})">📡 Preview sky map</button>
                                         </div>
                                     </div>
@@ -1955,10 +2058,21 @@
                             </div>
                             <div class="cam-preview-box">
                                 <div class="cam-preview-header">
-                                    <span><strong>Live sky, cloud &amp; wind check:</strong> <span id="cam-preview-label-${code}">${primaryCam.title} (${primaryCam.lat.toFixed(3)}, ${primaryCam.lon.toFixed(3)})</span></span>
-                                    <a class="google-action" href="${primaryCam.searchBackupUrl}" target="_blank" rel="noopener" style="padding:4px 8px;">🔍 Backup feeds ↗</a>
+                                    <span><strong>Live weather map:</strong> <span id="cam-preview-label-${code}">${primaryCam.title} (${primaryCam.lat.toFixed(3)}, ${primaryCam.lon.toFixed(3)})</span></span>
+                                    <div class="map-layer-bar">
+                                        <button class="map-layer-btn active" type="button" onclick="setWeatherMapLayer('${code}', 'clouds', this)">☁️ Clouds</button>
+                                        <button class="map-layer-btn" type="button" onclick="setWeatherMapLayer('${code}', 'temp', this)">🌡️ Temp</button>
+                                        <button class="map-layer-btn" type="button" onclick="setWeatherMapLayer('${code}', 'wind', this)">💨 Wind</button>
+                                        <button class="map-layer-btn" type="button" onclick="setWeatherMapLayer('${code}', 'rain', this)">🌧️ Rain</button>
+                                        <a class="google-action" href="${primaryCam.searchBackupUrl}" target="_blank" rel="noopener" style="padding:3px 7px; font-size:.68rem;">🔍 Backup feeds ↗</a>
+                                    </div>
                                 </div>
-                                <div id="cam-preview-slot-${code}"></div>
+                                <div id="cam-preview-slot-${code}" data-cam-slot="${code}" data-cam-index="0" data-overlay="clouds" data-mounted="false">
+                                    <div class="cam-map-placeholder" onclick="mountWeatherMap('${code}', true)">
+                                        <span>🗺️ Interactive weather map ready for <strong>${dest.name}</strong></span>
+                                        <span style="color:var(--coral-dark); font-weight:800;">Click or scroll here to load live cloud, wind &amp; temp map</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="google-actions">
                                 <button class="google-action" type="button" onclick="checkOsmBackupCams('${code}', this)">🔄 Check public OSM / coordinate backup cams</button>
