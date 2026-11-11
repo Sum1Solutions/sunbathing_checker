@@ -511,10 +511,20 @@
         .status-text { color: var(--ink); }
         .spinner { border-top-color: var(--coral); }
         .sunball-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
-        .sunball-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 6px 20px rgba(16,42,67,.06); color: var(--ink); }
+        .sunball-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 6px 20px rgba(16,42,67,.06); color: var(--ink); cursor: default; }
         .sunball-card:hover { border-color: rgba(255,79,163,.55); box-shadow: 0 14px 30px rgba(16,42,67,.12); }
         .sunball-card.perfect { border: 2px solid var(--coral); box-shadow: 0 8px 28px rgba(255,79,163,.16); }
-        .card-header { background: linear-gradient(135deg, #173c59, #102a43); padding: 21px; }
+        .card-header { background: linear-gradient(135deg, #173c59, #102a43); padding: 21px; cursor: pointer; }
+        .card-header:hover { background: linear-gradient(135deg, #1b4566, #122f4b); }
+        .expand-toggle-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 0.68rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-left: 6px; }
+        .expand-toggle-btn:hover { background: rgba(255,255,255,0.28); }
+        .card-nav { display: flex; background: #e9e5dc; border-bottom: 1px solid var(--line); padding: 4px; gap: 4px; overflow-x: auto; }
+        .card-nav-btn { flex: 1; padding: 8px 10px; border: 0; background: transparent; border-radius: 8px; color: var(--muted); font-size: .76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; transition: all .2s; font-family: inherit; }
+        .card-nav-btn:hover { color: var(--ink); background: rgba(255,255,255,.5); }
+        .card-nav-btn.active { background: #fff; color: var(--coral-dark); box-shadow: 0 2px 6px rgba(16,42,67,.08); font-weight: 800; }
+        .card-tab-panel { padding: 18px 20px; }
+        .card-tab-panel[hidden] { display: none !important; }
+        .card-tab-panel.cams-section, .card-tab-panel.hotels-section, .card-tab-panel.flights-section, .card-tab-panel.local-section { border-top: 0 !important; }
         .destination-info h3 { font-family: Georgia, serif; font-size: 1.55rem; font-weight: 500; }
         .meta-badge { background: rgba(255,255,255,.12); }
         .meta-badge.cannabis { background: rgba(169,217,199,.2); color: #bcebd9; }
@@ -1802,6 +1812,35 @@
         }
 
 
+        function switchCardTab(destCode, tabName, btn) {
+            const card = document.querySelector(`.sunball-card[data-destination="${destCode}"]`);
+            if (!card) return;
+            const buttons = card.querySelectorAll('.card-nav-btn');
+            buttons.forEach(b => {
+                const isActive = (b === btn);
+                b.classList.toggle('active', isActive);
+                b.setAttribute('aria-selected', String(isActive));
+            });
+            const panels = card.querySelectorAll('.card-tab-panel');
+            panels.forEach(p => {
+                if (p.dataset.tabName === tabName) {
+                    p.removeAttribute('hidden');
+                } else {
+                    p.setAttribute('hidden', '');
+                }
+            });
+        }
+
+        function toggleCardExpand(code) {
+            const card = document.querySelector(`.sunball-card[data-destination="${code}"]`);
+            if (!card) return;
+            card.classList.toggle('expanded');
+            const btn = card.querySelector('.expand-toggle-btn');
+            if (btn) {
+                btn.textContent = card.classList.contains('expanded') ? '⤡ Grid' : '⤢ Expand';
+            }
+        }
+
         function renderDestinationCard(result, criteria, hotelFilter) {
             const { code, dest, weather, weatherSource, bestWindow, score, routes, status } = result;
             const matchCriteria = result.matchCriteria || criteria;
@@ -1837,11 +1876,13 @@
                 : `<div class="cannabis-note">✓ ${cannabisStatus}<div class="cannabis-links"><button class="google-action check-cannabis-btn" type="button" aria-expanded="false" data-closed-label="🌿 Check dispensaries" data-open-label="🌿 Hide dispensary search" onclick="event.stopPropagation(); toggleDetails('cannabis-details-${code}', this)">🌿 Check dispensaries</button></div><div class="detail-panel" id="cannabis-details-${code}" hidden><a class="google-action" href="${googleCannabisUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Search current storefronts in Maps</a><span class="cannabis-disclaimer">Map results are not a legal determination. Verify current local rules, medical-card reciprocity, and whether visitors may purchase.</span></div></div>`;
 
             return `
-                <div class="sunball-card ${isPerfect ? 'perfect' : ''}" data-destination="${code}" onclick="this.classList.toggle('expanded')">
-                    <div class="card-header" style="position: relative;">
-                        <span class="expand-hint">click to expand</span>
+                <div class="sunball-card ${isPerfect ? 'perfect' : ''}" data-destination="${code}">
+                    <div class="card-header" style="position: relative;" onclick="toggleCardExpand('${code}')">
                         <div class="destination-info">
-                            <h3>${dest.name}</h3>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <h3>${dest.name}</h3>
+                                <button class="expand-toggle-btn" type="button" title="Toggle full-width card view" onclick="event.stopPropagation(); toggleCardExpand('${code}')">⤢ Expand</button>
+                            </div>
                             <div class="destination-meta">
                                 <span class="meta-badge jetblue">✈️ ${code}</span>
                                 <span class="meta-badge cannabis">${dest.cannabis === 'recreational' ? '🌿 Rec' : '🌿 Med'}</span>
@@ -1878,9 +1919,26 @@
                         </div>
                     </div>
 
-                    <div class="cams-section">
+                    <div class="card-nav" role="tablist">
+                        <button class="card-nav-btn active" role="tab" aria-selected="true" type="button" onclick="event.stopPropagation(); switchCardTab('${code}', 'cams', this)">
+                            <span>🏖️</span> <span>Beach &amp; Cams</span>
+                        </button>
+                        <button class="card-nav-btn" role="tab" aria-selected="false" type="button" onclick="event.stopPropagation(); switchCardTab('${code}', 'hotels', this)">
+                            <span>🏨</span> <span>Stay &amp; Season</span>
+                        </button>
+                        <button class="card-nav-btn" role="tab" aria-selected="false" type="button" onclick="event.stopPropagation(); switchCardTab('${code}', 'flights', this)">
+                            <span>✈️</span> <span>Flights</span>
+                        </button>
+                        <button class="card-nav-btn" role="tab" aria-selected="false" type="button" onclick="event.stopPropagation(); switchCardTab('${code}', 'local', this)">
+                            <span>🌴</span> <span>Local Scene</span>
+                        </button>
+                    </div>
+
+                    <div class="card-tab-panel cams-section" data-tab-name="cams">
                         <div class="section-title">${hasBeachCam ? '🎥 Live Coastline & Beach Cams' : '🎥 Live Sky & Resort Views'}</div>
-                        <button class="google-action check-cams-btn" type="button" aria-expanded="false" data-closed-label="${camClosedLabel}" data-open-label="${camOpenLabel}" onclick="event.stopPropagation(); toggleCamDetails('${code}', this)">${camClosedLabel}</button>
+                        <div style="margin-top:10px;">
+                            <button class="google-action check-cams-btn" type="button" aria-expanded="false" data-closed-label="${camClosedLabel}" data-open-label="${camOpenLabel}" onclick="event.stopPropagation(); toggleCamDetails('${code}', this)">${camClosedLabel}</button>
+                        </div>
                         <div class="detail-panel" id="cam-details-${code}" hidden onclick="event.stopPropagation()">
                             <div class="cam-cards">
                                 ${cams.map((cam, idx) => `
@@ -1909,73 +1967,82 @@
                         </div>
                     </div>
 
-                    <div class="flights-section">
-                        <div class="section-title">✈️ Nonstop Flights</div>
-                        <div class="flight-options" data-route-options="${code}"><button class="google-action check-flights-btn" type="button" onclick="event.stopPropagation(); checkFlights('${code}')">✈ Check flights</button></div>
-                        <div class="google-actions" data-google-flights="${code}" hidden></div>
-                    </div>
-
-                    <div class="hotels-section">
-                        <div class="section-title">🏨 Hotels</div>
-                        <div class="hotel-selector-wrap">
-                            <label class="hotel-selector-label" for="hotel-select-${code}">Your Favorite Hotel at ${dest.name}</label>
+                    <div class="card-tab-panel hotels-section" data-tab-name="hotels" hidden>
+                        <div class="section-title">🏨 Favorite Hotel &amp; Season</div>
+                        <div class="hotel-selector-wrap" style="margin-top:10px; padding-top:0; border-top:0;">
+                            <label class="hotel-selector-label" for="hotel-select-${code}">Your Preferred Hotel at ${dest.name}</label>
                             <select id="hotel-select-${code}" class="hotel-selector" onclick="event.stopPropagation()" onchange="onCardHotelChanged('${code}', this.value)">
                                 ${hotels.map(h => `<option value="${h.name}">${h.name} (${h.type === 'marriott' ? 'Marriott' : h.type === 'noble' ? 'Noble House' : 'Beach'})</option>`).join('')}
                             </select>
                         </div>
-                        <div style="margin-top:12px;">
+                        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="google-action check-hotels-btn" type="button" aria-expanded="false" data-closed-label="🏨 Check hotels &amp; rates" data-open-label="🏨 Hide hotel options" onclick="event.stopPropagation(); toggleDetails('hotel-details-${code}', this)">🏨 Check hotels &amp; rates</button>
                             <button class="google-action season-btn" type="button" onclick="event.stopPropagation(); showSeasonalTiming('${code}', this)">🌤️ Explore seasonal timing</button>
                         </div>
                         <div class="season-box" id="season-results-${code}" hidden onclick="event.stopPropagation()"></div>
                         <div class="detail-panel" id="hotel-details-${code}" hidden>
-                        <div class="hotel-chips">
-                            ${hotels.slice(0, 4).map(h => `
-                                <a href="https://www.google.com/search?q=${encodeURIComponent(h.name + ' ' + dest.name + ' hotel')}"
-                                   target="_blank" class="hotel-chip ${h.type}" onclick="event.stopPropagation()">
-                                    ${h.type === 'marriott' ? '🏨' : h.type === 'noble' ? '✨' : '🏖️'} ${h.name.substring(0, 25)}${h.name.length > 25 ? '...' : ''}
+                            <div class="hotel-chips">
+                                ${hotels.slice(0, 4).map(h => `
+                                    <a href="https://www.google.com/search?q=${encodeURIComponent(h.name + ' ' + dest.name + ' hotel')}"
+                                       target="_blank" class="hotel-chip ${h.type}" onclick="event.stopPropagation()">
+                                        ${h.type === 'marriott' ? '🏨' : h.type === 'noble' ? '✨' : '🏖️'} ${h.name.substring(0, 25)}${h.name.length > 25 ? '...' : ''}
+                                    </a>
+                                `).join('')}
+                                <a href="https://www.google.com/travel/search?q=${encodeURIComponent('Marriott Bonvoy hotels in ' + dest.name + ', ' + dest.state)}"
+                                   target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
+                                    🔍 All Bonvoy
                                 </a>
-                            `).join('')}
-                            <a href="https://www.google.com/travel/search?q=${encodeURIComponent('Marriott Bonvoy hotels in ' + dest.name + ', ' + dest.state)}"
-                               target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
-                                🔍 All Bonvoy
-                            </a>
-                            <a href="https://www.marriott.com/search/submitSearch.mi?destinationAddress.city=${encodeURIComponent(dest.name)}&destinationAddress.stateProvince=${dest.state}&isInternalSearch=true&searchType=InCity"
-                               target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
-                                🏨 Marriott.com
-                            </a>
+                                <a href="https://www.marriott.com/search/submitSearch.mi?destinationAddress.city=${encodeURIComponent(dest.name)}&destinationAddress.stateProvince=${dest.state}&isInternalSearch=true&searchType=InCity"
+                                   target="_blank" class="hotel-chip marriott" onclick="event.stopPropagation()">
+                                    🏨 Marriott.com
+                                </a>
+                            </div>
+                            <div class="google-actions">
+                                <a class="google-action" href="${googleHotelsUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌂ Search Google Hotels</a>
+                                <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Show hotels in Maps</a>
+                            </div>
                         </div>
-                        <div class="google-actions">
-                            <a class="google-action" href="${googleHotelsUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌂ Search Google Hotels</a>
-                            <a class="google-action" href="${googleMapsPlaceUrl(dest)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌖ Show hotels in Maps</a>
-                        </div>
-                        </div>
-                        ${cannabisNote}
                     </div>
 
-                    ${dest.restaurants && dest.restaurants.length > 0 ? `
-                    <div class="restaurants-section" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
-                        <div class="section-title">🍽️ Recommended Restaurants</div>
-                        <div class="hotel-chips">
-                            ${dest.restaurants.slice(0, 4).map(r => `
-                                <a href="https://www.opentable.com/s?term=${encodeURIComponent(r)}&queryUnderstandingType=location&originCorrelationId=&corrid="
-                                   target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.4); background: rgba(218,55,67,0.15);">
-                                    🍽️ ${r}
-                                </a>
-                            `).join('')}
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <a href="https://www.opentable.com/s?term=${encodeURIComponent(dest.name)}&queryUnderstandingType=location"
-                               target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.5); background: rgba(218,55,67,0.2);">
-                                🔍 OpenTable ${dest.name}
-                            </a>
-                            <a href="https://resy.com/cities/${dest.name.toLowerCase().replace(/[^a-z]/g, '-').replace(/-+/g, '-')}"
-                               target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(199,21,21,0.5); background: rgba(199,21,21,0.2);">
-                                🔍 Resy ${dest.name}
-                            </a>
+                    <div class="card-tab-panel flights-section" data-tab-name="flights" hidden>
+                        <div class="section-title">✈️ Nonstop Flights from PVD / BOS</div>
+                        <div style="margin-top:10px;">
+                            <div class="flight-options" data-route-options="${code}">
+                                <button class="google-action check-flights-btn" type="button" onclick="event.stopPropagation(); checkFlights('${code}')">✈ Check flights</button>
+                            </div>
+                            <div class="google-actions" data-google-flights="${code}" hidden></div>
                         </div>
                     </div>
-                    ` : ''}
+
+                    <div class="card-tab-panel local-section" data-tab-name="local" hidden>
+                        <div class="section-title">🌿 Local Cannabis Rules</div>
+                        <div style="margin-top:10px;">
+                            ${cannabisNote}
+                        </div>
+                        ${dest.restaurants && dest.restaurants.length > 0 ? `
+                        <div class="restaurants-section" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+                            <div class="section-title">🍽️ Recommended Dining</div>
+                            <div class="hotel-chips" style="margin-top:10px;">
+                                ${dest.restaurants.slice(0, 4).map(r => `
+                                    <a href="https://www.opentable.com/s?term=${encodeURIComponent(r)}&queryUnderstandingType=location&originCorrelationId=&corrid="
+                                       target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.4); background: rgba(218,55,67,0.15);">
+                                        🍽️ ${r}
+                                    </a>
+                                `).join('')}
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <a href="https://www.opentable.com/s?term=${encodeURIComponent(dest.name)}&queryUnderstandingType=location"
+                                   target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(218,55,67,0.5); background: rgba(218,55,67,0.2);">
+                                    🔍 OpenTable ${dest.name}
+                                </a>
+                                <a href="https://resy.com/cities/${dest.name.toLowerCase().replace(/[^a-z]/g, '-').replace(/-+/g, '-')}"
+                                   target="_blank" class="hotel-chip" onclick="event.stopPropagation()" style="border-color: rgba(199,21,21,0.5); background: rgba(199,21,21,0.2);">
+                                    🔍 Resy ${dest.name}
+                                </a>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }
