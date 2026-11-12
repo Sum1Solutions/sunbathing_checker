@@ -62,14 +62,12 @@ Toggle airports on/off to filter which flights appear.
 - **Beach properties** for coastal sun exposure
 - Direct links to Google search and Marriott booking
 
-### Google destination links
-- Open a large Google Maps area view centered on each destination
-- Search nearby hotels and cannabis storefronts in Google Maps
-- Reveal the curated hotel names for a destination with **Check hotels**
-- Reveal a current Google Maps storefront search with **Check dispensaries**
-- Reveal curated hotel-zone beach, coast, and sky cameras with **Check live beach cams** / **Check live sky & resort cams** (lazy-mounted live sky/cloud/wind embed + daylight replay + OpenStreetMap/coordinate backup lookup)
-- Search Google Hotels for the selected city and dates
-- Search Google Flights after dated nonstop availability is verified
+### Segmented Destination Cards & Live Weather Maps
+Each destination card is organized into four focused tabs right below the 7-day weather window:
+- **`🏖️ Beach & Cams` (Default)**: Curated hotel-zone beach, coast, and sky cameras paired with an interactive live weather map on all 19 destinations (viewport-mounted with a 6-map active WebGL pool and 1-click **`☁️ Clouds`**, **`🌡️ Temp`**, **`💨 Wind`**, and **`🌧️ Rain`** layer buttons, plus OpenStreetMap/coordinate backup lookup)
+- **`🏨 Stay & Season`**: Favorite-hotel selector (automatically focusing the nearest camera/weather map zone), 3-year Open-Meteo historical seasonal timing, and direct Marriott Bonvoy (`All Bonvoy` / `Marriott.com`), Google Hotels, and Google Maps links
+- **`✈️ Flights`**: Opt-in dated nonstop flight verification from PVD and BOS via **Check flights** plus direct Google Flights search
+- **`🌴 Local Scene`**: Local cannabis regulations, **Check dispensaries** storefront map search, and curated **OpenTable** / **Resy** dining links
 
 ### Restaurant Recommendations
 - Curated restaurant picks for each destination
